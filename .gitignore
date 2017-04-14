@@ -1,0 +1,51 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 384ce1c039ef3cc4586804ee067598c3fb138c47
+bdd
+ltlf2ws1s
+mona
+
+#temporary files
+*~
+
+#testing files
+*.dfa
+*.mona
+*.ltlf
+*.part
+*.ltl
+<<<<<<< HEAD
+>>>>>>> first commit
+=======
+>>>>>>> 384ce1c039ef3cc4586804ee067598c3fb138c47
