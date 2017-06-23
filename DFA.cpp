@@ -2,7 +2,7 @@
 using namespace std;
 using namespace boost;
 
-
+//update test
 
 DFA::DFA(){
     //ctor
@@ -42,8 +42,11 @@ void DFA::read_partfile(string partfile){
                 split(outputs, line, is_any_of(" "));
                 //print(outputs);
             }
-            else
+            else{
                 cout<<"read partfile error!"<<endl;
+                cout<<partfile<<endl;
+                cout<<line<<endl;
+            }
 		}
     }
     f.close();
