@@ -107,6 +107,51 @@ bool syn::realizablity(){
 
 }
 
+bool syn::realizablity_variant(){
+    BDD transducer;
+    while(true){
+        int index;
+        BDD O = mgr.bddOne();
+        for(int i = 0; i < bdd.output.size(); i++){
+            index = bdd.output[i];
+            O *= bdd.bddvars[index];
+        }
+
+        BDD tmp = W[cur] + existsyn_invariant(O, transducer);
+        W.push_back(tmp);
+        cur++;
+        if(fixpoint())
+            break;
+
+        BDD I = mgr.bddOne();
+        for(int i = 0; i < bdd.input.size(); i++){
+            index = bdd.input[i];
+            I *= bdd.bddvars[index];
+        }
+
+        Wprime.push_back(univsyn_invariant(I));
+        if((Wprime[cur].Eval(state2bit(bdd.init))).IsOne()){
+            return true;
+        }
+
+    }
+    if((Wprime[cur-1].Eval(state2bit(bdd.init))).IsOne()){
+        BDD O = mgr.bddOne();
+        vector<BDD> S2O;
+        for(int i = 0; i < bdd.output.size(); i++){
+            O *= bdd.bddvars[bdd.output[i]];
+        }
+        O *= bdd.bddvars[bdd.nbits];
+        //naive synthesis
+        transducer.SolveEqn(O, S2O, outindex(), bdd.output.size());
+        strategy(S2O);
+
+        return true;
+    }
+    return false;
+
+}
+
 
 void syn::strategy(vector<BDD>& S2O){
     vector<BDD> winning;
@@ -180,6 +225,30 @@ BDD syn::univsyn(){
     //dumpdot(eliminput, "W01");
     //dumpdot(eliminput, "EU"+to_string(cur));
     return eliminput;
+
+}
+
+BDD syn::existsyn_invariant(BDD exist, BDD& transducer){
+    BDD tmp = Wprime[cur];
+    int offset = bdd.nbits + bdd.nvars;
+
+    //dumpdot(I, "W00");
+    tmp = prime(tmp);
+    for(int i = 0; i < bdd.nbits; i++){
+        tmp = tmp.Compose(bdd.res[i], offset+i);
+    }
+    transducer = tmp;
+    tmp *= !Wprime[cur];
+    BDD elimoutput = tmp.ExistAbstract(exist);
+    return elimoutput;
+
+}
+
+BDD syn::univsyn_invariant(BDD univ){
+
+    BDD tmp = W[cur];
+    BDD elimuniv = tmp.UnivAbstract(univ);
+    return elimuniv;
 
 }
 
