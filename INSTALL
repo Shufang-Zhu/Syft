@@ -1,0 +1,13 @@
+Compilation Instructions for Syft using CMake
+
+1. Make build folder so your directory is not flooded with build files:
+
+   mkdir build && cd build
+
+2. Run CMake to generate the makefile:
+
+   cmake ..
+
+3. Compile using the generated makefile:
+
+   make

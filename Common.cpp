@@ -1,7 +1,7 @@
 #include "Common.h"
 
-string state2bin(int n){
-    string res;
+std::string state2bin(int n){
+  std::string res;
     while (n)
     {
         res.push_back((n & 1) + '0');
