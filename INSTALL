@@ -1,5 +1,19 @@
 Compilation Instructions for Syft using CMake
 
+==== Install CUDD ====
+
+0.1 Make sure CUDD is installed. CUDD can be found by:
+    wget ftp://vlsi.colorado.edu/pub/cudd-3.0.0.tar.gz
+    tar -xf cudd-3.0.0.tar.gz
+    cd cudd-3.0.0
+
+0.2 Install CUDD:
+    ./configure --enable-slient-rules -enable-obj --enable-dddmp
+    sudo make install
+
+
+==== Install Syft ====
+
 1. Make build folder so your directory is not flooded with build files:
 
    mkdir build && cd build
