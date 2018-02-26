@@ -11,6 +11,10 @@ Compilation Instructions for Syft using CMake
     ./configure --enable-slient-rules -enable-obj --enable-dddmp
     sudo make install
 
+==== Install FLEX, BISON ====
+
+0.3 Install flex and bison:
+    sudo apt-get install flex bison
 
 ==== Install Syft ====
 
