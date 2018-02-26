@@ -7,9 +7,10 @@ set(CMAKE_MODULE_PATH
     "${CMAKE_MODULE_PATH}"
     "${CMAKE_ROOT_DIR}/cmake/Modules"
     "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
-
+  
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
+  
 find_package(cudd REQUIRED)
 
-add_executable(bdd Common.cpp DFA.cpp InputFirst.cpp main.cpp syn.cpp)
-
-target_link_libraries(bdd ${CUDD_LIBRARIES})
+add_subdirectory(src)
