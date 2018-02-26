@@ -179,7 +179,8 @@ int** syn::outindex(){
 
 int* syn::state2bit(int n){
     string res;
-    int s[bdd.nbits+1];
+    int* s = new int[bdd.nbits+1];
+    
     while (n)
     {
         res.push_back((n & 1) + '0');
