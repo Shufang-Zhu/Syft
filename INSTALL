@@ -2,14 +2,18 @@ Compilation Instructions for Syft using CMake
 
 ==== Install CUDD ====
 
-0.1 Make sure CUDD is installed. CUDD can be found by:
-    wget ftp://vlsi.colorado.edu/pub/cudd-3.0.0.tar.gz
-    tar -xf cudd-3.0.0.tar.gz
-    cd cudd-3.0.0
+0.1 Make sure CUDD is installed. CUDD can be found at:
+    https://github.com/ivmai/cudd.git
 
 0.2 Install CUDD:
     ./configure --enable-slient-rules -enable-obj --enable-dddmp
     sudo make install
+
+    If you get an error about aclocal, this might be due to either
+    a. Not having automake:
+       sudo apt-get install automake
+    b. Needing to reconfigure, do this before configuring:
+       autoreconf -i
 
 ==== Install FLEX, BISON ====
 
