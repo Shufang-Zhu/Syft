@@ -20,6 +20,11 @@ Compilation Instructions for Syft using CMake
 0.3 Install flex and bison:
     sudo apt-get install flex bison
 
+==== Install MONA ====
+
+0.4 You probably want MONA if you are using Syft:
+    sudo apt-get install mona
+
 ==== Install Syft ====
 
 1. Make build folder so your directory is not flooded with build files:
