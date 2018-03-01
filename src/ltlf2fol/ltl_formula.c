@@ -116,7 +116,7 @@ print_formula (ltl_formula *root)
           printf ("X ");
           break;
         case eWNEXT:
-          printf ("W ");
+          printf ("N ");
           break;
         case eWUNTIL:
           printf (" W ");
