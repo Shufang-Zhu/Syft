@@ -50,7 +50,7 @@ std::string to_string (ltl_formula *root)
           res += "X ";
           break;
         case eWNEXT:
-          res += "W ";
+          res += "N ";
           break;
         case eGLOBALLY:
           res += "G ";
@@ -60,6 +60,9 @@ std::string to_string (ltl_formula *root)
           break;
         case eUNTIL:
           res += " U ";
+          break;
+        case eWUNTIL:
+          res += " W ";
           break;
         case eRELEASE:
           res += " V ";
