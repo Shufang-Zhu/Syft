@@ -178,26 +178,11 @@ int** syn::outindex(){
 }
 
 int* syn::state2bit(int n){
-    string res;
-    int* s = new int[bdd.nbits+1];
-    
-    while (n)
-    {
-        res.push_back((n & 1) + '0');
-        n >>= 1;
+    int* s = new int[bdd.nbits];
+    for (int i=bdd.nbits-1; i>=0; i--){
+      s[i] = n%2;
+      n = n/2;
     }
-
-    if (res.empty())
-        res = "0";
-    else
-        reverse(res.begin(), res.end());
-    //cout<<res<<endl;
-    int offset = bdd.nbits - res.length();
-    for(int i = 0; i < offset; i++)
-        s[i] = 0;
-    for(int i = offset; i < res.length(); i++)
-        s[i] = (int(res[i]) - 48);
-    s[bdd.nbits] = 1;
     return s;
 }
 
