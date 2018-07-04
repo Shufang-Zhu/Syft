@@ -108,7 +108,7 @@ ifstream f(filename);
                 }
                 else if(strfind(line, "final")){
                     split(fields, line, is_any_of(" "));
-                    int i = 1;
+                    int i = 1; // start at 1 to ignore "final" token
                     while(i < fields.size()){
                         if(fields[i] == "1")
                             finalstates.push_back(i-1);
