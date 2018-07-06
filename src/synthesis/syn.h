@@ -10,7 +10,7 @@ class syn
     public:
         syn(string filename, string partfile);
         bool realizablity(unordered_map<unsigned int, BDD>& IFstrategy);
-        bool realizablity_variant(std::vector<BDD>& S2O);
+        bool realizablity_variant(unordered_map<unsigned int, BDD>& IFstrategy);
         virtual ~syn();
 	void printBDDSat(BDD b);
 

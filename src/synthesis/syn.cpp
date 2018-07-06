@@ -123,7 +123,7 @@ bool syn::realizablity(unordered_map<unsigned int, BDD>& IFstrategy){
     return false;
 }
 
-bool syn::realizablity_variant(std::vector<BDD>& S2O){
+bool syn::realizablity_variant(std::unordered_map<unsigned, BDD>& IFstrategy){
     BDD transducer;
     while(true){
         int index;
@@ -152,8 +152,9 @@ bool syn::realizablity_variant(std::vector<BDD>& S2O){
 
     }
     if((Wprime[cur-1].Eval(state2bit(bdd.init))).IsOne()){
+      // TODO: use ifstrategysynthesis
         BDD O = mgr.bddOne();
-	//        vector<BDD> S2O;
+	vector<BDD> S2O;
         for(int i = 0; i < bdd.output.size(); i++){
             O *= bdd.bddvars[bdd.output[i]];
         }
