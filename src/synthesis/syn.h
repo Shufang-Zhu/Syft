@@ -9,13 +9,16 @@ class syn
 {
     public:
         syn(string filename, string partfile);
-        bool realizablity();
-        bool realizablity_variant();
+        bool realizablity(unordered_map<unsigned int, BDD>& IFstrategy);
+        bool realizablity_variant(std::vector<BDD>& S2O);
         virtual ~syn();
-    protected:
+	void printBDDSat(BDD b);
+
+	DFA bdd;
+
+ protected:
     private:
         Cudd mgr;
-        DFA bdd;
         int cur = 0;
         bool fixpoint();
         vector<BDD> W;

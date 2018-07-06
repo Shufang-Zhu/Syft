@@ -9,6 +9,8 @@ syn::syn(string filename, string partfile)
     mgr = *(bdd.mgr);
     initializer();
 
+    bdd.bdd2dot();
+
 }
 
 syn::~syn()
@@ -71,7 +73,20 @@ bool syn::fixpoint(){
         return true;
 }
 
-bool syn::realizablity(){
+void syn::printBDDSat(BDD b){
+
+  std::cout<<"sat with: ";
+  int max = bdd.nstates;
+  
+  for (int i=0; i<max; i++){
+    if (b.Eval(state2bit(i)).IsOne()){
+      std::cout<<i<<", ";
+    }
+  }
+  std::cout<<std::endl;
+}
+
+bool syn::realizablity(unordered_map<unsigned int, BDD>& IFstrategy){
     while(true){
         //cout<<"interative"<<endl;
         //dumpdot(W[cur], "W"+to_string(cur));
@@ -80,34 +95,35 @@ bool syn::realizablity(){
         W.push_back(tmp);
         cur++;
         //dumpdot(W[cur], "W"+to_string(cur));
+	Wprime.push_back(existsyn());
         if(fixpoint())
             break;
-        Wprime.push_back(existsyn());
+	//        Wprime.push_back(existsyn());
         //assert(cur = (W.size() - 1));
     }
     if((Wprime[cur-1].Eval(state2bit(bdd.init))).IsOne()){
         BDD O = mgr.bddOne();
-        vector<BDD> S2O;
+	//        vector<BDD> S2O;
         for(int i = 0; i < bdd.output.size(); i++){
             //cout<<bdd.output[i]<<endl;
             O *= bdd.bddvars[bdd.output[i]];
         }
+	/*
         O *= bdd.bddvars[bdd.nbits];
-        /*//naive synthesis
-        W[cur].SolveEqn(O, S2O, outindex(), bdd.output.size());
+        //naive synthesis
+        BDD cons = W[cur].SolveEqn(O, S2O, &yindex, bdd.output.size());
         strategy(S2O);
-        */
+	*/
+	
         InputFirstSynthesis IFsyn(mgr);
-        unordered_map<unsigned int, BDD> IFstrategy = IFsyn.synthesize(W[cur], O);
-        //IFstrategy = input_first(W[cur], O);
+        IFstrategy = IFsyn.synthesize(W[cur], O);
+
         return true;
     }
-
     return false;
-
 }
 
-bool syn::realizablity_variant(){
+bool syn::realizablity_variant(std::vector<BDD>& S2O){
     BDD transducer;
     while(true){
         int index;
@@ -137,7 +153,7 @@ bool syn::realizablity_variant(){
     }
     if((Wprime[cur-1].Eval(state2bit(bdd.init))).IsOne()){
         BDD O = mgr.bddOne();
-        vector<BDD> S2O;
+	//        vector<BDD> S2O;
         for(int i = 0; i < bdd.output.size(); i++){
             O *= bdd.bddvars[bdd.output[i]];
         }
