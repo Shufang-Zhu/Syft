@@ -12,3 +12,7 @@ add_executable(ltlf2fol translate.cpp)
 
 target_link_libraries(readFormula ltlf_translation)
 target_link_libraries(ltlf2fol ltlf_translation)
+
+install(TARGETS ltlf2fol
+  RUNTIME DESTINATION bin
+  )
