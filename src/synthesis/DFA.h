@@ -32,6 +32,8 @@ class DFA
         vector<int> input;
         vector<int> output;
 
+	vector<string> variables;
+	
         //new bdd constructer
         void construct_bdd_new();
 
@@ -41,7 +43,7 @@ class DFA
     private:
 		int nodes;
 		vector<int> behaviour;
-		vector<string> variables;
+		//		vector<string> variables;
 		vector<item> smtbdd;
         void read_from_file(string filename); //read the ltlf formula
         void read_partfile(string partfile); //read the partfile
