@@ -85,18 +85,20 @@ int main(int argc, char ** argv){
     syn test(filename, partfile);
 
     std::unordered_map<unsigned, BDD> S2O;
+    std::clock_t begint = std::clock();
     bool res = test.realizablity(S2O);
+    double time = double(std::clock()-begint) / CLOCKS_PER_SEC;
 
     if(res){
-        cout<<"realizable"<<endl;
-	for (auto & pair : S2O){
+      cout<<"realizable, time = "<<time<<endl;
+      /*	for (auto & pair : S2O){
 	  std::cout<<pair.first<<": ";
 	  test.printBDDSat(pair.second);
-	}
+	  }*/
 	playGame(test.bdd, S2O);
     }
     else
-        cout<<"unrealizable"<<endl;
+      cout<<"unrealizable, time = "<<time<<endl;
     return 0;
 
 }
