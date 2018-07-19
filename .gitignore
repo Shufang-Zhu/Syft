@@ -35,6 +35,8 @@
 bdd
 ltlf2ws1s
 mona
+ltlf2fol
+ltlf2fol_old
 
 #temporary files
 *~
@@ -45,6 +47,7 @@ mona
 *.ltlf
 *.part
 *.ltl
+*.fol
 <<<<<<< HEAD
 >>>>>>> first commit
 =======
