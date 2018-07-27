@@ -7,3 +7,5 @@
 #include <stdlib.h>
 #include <set>
 #include <iostream>
+
+using namespace CUDD;
