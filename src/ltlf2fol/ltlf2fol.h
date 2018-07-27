@@ -45,7 +45,7 @@ std::string get_var (ltl_formula*);
 
 void ltlf2fol (ltl_formula*);
 
-void trans_fol (ltl_formula*, int, int&);
+std::string trans_fol (ltl_formula*, int, int&);
 
 void printvars (ltl_formula*);
 
@@ -54,6 +54,7 @@ void print_alphabet (ltl_formula*);
 void print_alphabet_not (ltl_formula*);
 
 void print_alphabet_no_comma (ltl_formula*);
+std::string alphabet_no_comma (ltl_formula*);
 
 std::string up(std::string);
 

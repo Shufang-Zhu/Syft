@@ -8,42 +8,34 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <set>
+#include <assert.h>
 #include <iostream>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 
 using namespace std;
+#define MAXN 1000000
+
 
 void ltlf2fol (ltl_formula *root)
 {
   int c = 1;
-  trans_fol(root, 1, c);
+  string res;
+  
   set<string> P = get_alphabet (root);
   if(!P.empty()){
-    cout<<"var2 ALIVE, ";
+    // cout<<"var2 ALIVE, ";
+    cout<<"m2l-str;"<<endl;
+    cout<<"var2 ";
     print_alphabet_no_comma(root);
     cout<<";"<<endl;
     // cout<<"allpos ALIVE;"<<endl;
-    cout<<"0 in ALIVE;"<<endl;
+    // cout<<"0 in ALIVE;"<<endl;
   }
   
-// cout<<"0 in ALIVE;"<<endl;
-cout<<"all1 p: (p in ALIVE => "<<endl;
-cout<<"         all1 l:( l <= p => l in ALIVE));"<<endl;
-if(!P.empty()){
-  set<string>::iterator it = P.begin ();
-  while (it != P.end ()){
-    cout<<"all1 p: (p in "<<up (*it)<<" => "<<endl;
-    cout<<"         all1 l:( l <= p => l in ALIVE));"<<endl;
-    it++;
-  }
-}
-// cout<<"export(\"tmp.dfa\", F1(0, ALIVE";
-
-  cout<<"F1(0, ALIVE";
-  print_alphabet(root);
-  // cout<<"));"<<endl;
-  cout<<");"<<endl;
+  res = trans_fol(root, 0, c);
+  cout<<res<<";"<<endl;
+  
 
 }
 
@@ -59,6 +51,22 @@ void print_alphabet_no_comma (ltl_formula* root){
       it++;
     }
   }
+}
+
+string alphabet_no_comma (ltl_formula* root){
+  string res = "";
+  set<string> P = get_alphabet (root);
+  if(!P.empty()){
+    set<string>::iterator it = P.begin ();
+    // cout<<toupper(*it);
+    res += up(*it);
+    it++;
+    while (it != P.end ()){
+      res += ", "+up(*it);
+      it++;
+    }
+  }
+  return res;
 }
 
 void print_alphabet (ltl_formula* root){
@@ -103,178 +111,119 @@ void printvars (ltl_formula* root){
   }
 }
 
-void trans_fol(ltl_formula* root, int t, int& c){
+string trans_fol(ltl_formula* root, int t, int& c){
+  string curs, ts;
+  string exs, alls;
+  string res;
   int cur;
   switch(root->_type)
   {
         case eNOT:
-          c = c + 1;
-          cur = c;
-          trans_fol(root->_right, cur, c);
-          cout<<"# F"<<t<<" denotes "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE";
-          printvars(root);
-          cout<<") = "<<endl;
-          cout<<"     ~F"<<cur<<" (p, ALIVE";
-          print_alphabet(root->_right);
-          cout<<")"<<endl;
-          cout<<"       & (p in ALIVE)"<<endl;
-          cout<<"       & all1 l:(l <= p => l in ALIVE);"<<endl<<endl;
+          res = "~(";
+          res += trans_fol(root->_right, t, c);
+          res += ")";
           break;
         case eNEXT:
-          c = c + 1;
-          cur = c;
-          trans_fol(root->_right, cur, c);
-          cout<<"# F"<<t<<" denotes "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE";
-          printvars(root);
-          cout<<") = "<<endl;
-          cout<<"     F"<<cur<<" (p+1, ALIVE ";
-          print_alphabet(root->_right);
-          cout<<");"<<endl<<endl;
+          exs = "x"+to_string(t+1);
+          if (t == 0)
+            ts = to_string(t);
+          else
+            ts = "x"+to_string(t);
+          res = "(ex1 "+exs+": ("+exs+"="+ts+"+1 & (";
+          res += trans_fol(root->_right, t+1, c);
+          res += ")))";
           break;
         case eWNEXT:
-          c = c + 1;
-          cur = c;
-          trans_fol(root->_right, cur, c);
-          cout<<"# F"<<t<<" denotes "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE";
-          printvars(root);
-          cout<<") = "<<endl;
-          cout<<"     F"<<cur<<" (p+1, ALIVE ";
-          print_alphabet(root->_right);
-          cout<<")"<<endl;
-          cout<<"     |"<<endl;
-          cout<<"     (p = max ALIVE);"<<endl<<endl;
+          exs = "x"+to_string(t+1);
+          if (t == 0)
+            ts = to_string(t);
+          else
+            ts = "x"+to_string(t);
+          res = "((ex1 "+exs+": ("+exs+"="+ts+"+1 & (";
+          res += trans_fol(root->_right, t+1, c);
+          res += "))) | ("+ts+" = max $))";
           break;
         case eFUTURE:
-          c = c + 1;
-          cur = c;
-          trans_fol(root->_right, cur, c);
-          cout<<"# F"<<t<<" denotes "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE";
-          printvars(root);
-          cout<<") = "<<endl;
-          cout<<"     ex1 q:((q >= p & q <= max ALIVE)"<<endl;
-          cout<<"             & F"<<cur<<" (q, ALIVE";
-          print_alphabet(root->_right);
-          cout<<")"<<endl;
-          cout<<"            );"<<endl<<endl;
+          exs = "x"+to_string(t+1);
+          if (t == 0)
+            ts = to_string(t);
+          else
+            ts = "x"+to_string(t);
+          res = "(ex1 "+exs+": ("+ts+" <= "+exs+" & (";
+          res += trans_fol(root->_right, t+1, c);
+          res += ")))";
           break;
         case eGLOBALLY:
-          c = c + 1;
-          cur = c;
-          trans_fol(root->_right, cur, c);
-          cout<<"# F"<<t<<" denotes "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE";
-          printvars(root);
-          cout<<") = "<<endl;
-          cout<<"     all1 q:((p<= q & q <= max ALIVE)"<<endl;
-          cout<<"             => F"<<cur<<" (q, ALIVE";
-          print_alphabet(root->_right);
-          cout<<")"<<endl;
-          cout<<"            );"<<endl<<endl;
+          alls = "x"+to_string(t+1);
+          if (t == 0)
+            ts = to_string(t);
+          else
+            ts = "x"+to_string(t);
+          res = "(all1 "+alls+": (("+ts+" <= "+alls+") => (";
+          res += trans_fol(root->_right, t+1, c);
+          res += ")))";
           break;
         case eUNTIL:
-          c = c + 2;
-          cur = c;
-          trans_fol(root->_right, cur-1, c);
-          trans_fol(root->_left, cur, c);
-          cout<<"# F"<<t<<" denotes "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE ";
-          printvars(root);
-          cout<<") = "<<endl;
-          cout<<"     ex1 q:( q >= p & q <= max ALIVE"<<endl;
-          cout<<"             & F"<<cur-1<<" (q, ALIVE";
-          print_alphabet(root->_right);
-          cout<<")"<<endl;
-          cout<<"             &"<<endl;
-          cout<<"             all1 k:(p<= k & k < q) => F"<<cur<<" (k, ALIVE";
-          print_alphabet(root->_left);
-          cout<<")"<<endl;
-          cout<<"            );"<<endl<<endl;
+          exs = "x"+to_string(t+1);
+          alls = "x"+to_string(t+2);
+          if (t == 0)
+            ts = to_string(t);
+          else
+            ts = "x"+to_string(t);
+          res = "(ex1 "+exs+": ("+ts+" <= "+exs+" & (";
+          res += trans_fol(root->_right, t+1, c);
+          res += ") & (all1 "+alls+": ("+ts+" <= "+alls+" & "+alls;
+          res += " < "+exs+" => (";
+          res += trans_fol(root->_left, t+2, c);
+          res += ")))))";
           break;
-        case eRELEASE:
-          c = c + 2;
-          cur = c;
-          trans_fol(root->_right, cur-1, c);
-          trans_fol(root->_left, cur, c);
-          cout<<"# F"<<t<<" denotes "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE ";
-          printvars(root);
-          cout<<") = "<<endl;
-          cout<<"     (ex1 q:( q >= p"<<endl;
-          cout<<             "& F"<<cur-1<<" (q, ALIVE";
-          print_alphabet(root->_left);
-          cout<<")"<<endl;
-          cout<<"             &"<<endl;
-          cout<<"             all1 k:(p<= k & k <= q) => F"<<cur<<" (k, ALIVE";
-          print_alphabet(root->_right);
-          cout<<")"<<endl;
-          cout<<"            ));"<<endl<<endl;
-          cout<<"      |"<<endl;
-          cout<<"      (all1 q:(p<=q & q<=max ALIVE) => F"<<cur<<" (k, ALIVE";
-          print_alphabet(root->_right);
-          cout<<"));"<<endl;
+        case eRELEASE: //New
+          exs = "x"+to_string(t+1);
+          alls = "x"+to_string(t+2);
+          if (t == 0)
+            ts = to_string(t);
+          else
+            ts = "x"+to_string(t);
+          res = "((ex1 "+exs+": ("+ts+" <= "+exs+" & (";
+          res += trans_fol(root->_left, t+1, c);
+          res += ") & (all1 "+alls+": ("+ts+" <= "+alls+" & "+alls;
+          res += " <= "+exs+" => (";
+          res += trans_fol(root->_right, t+2, c);
+          res += ")))))";
+          res += "| (all1 "+alls+": (("+ts+" <= "+alls+" & "+alls+" <= max $) => (";
+          res += trans_fol(root->_right, t+2, c);
+          res += "))))";
           break;
         case eOR:
-          c = c + 2;
-          cur = c;
-          trans_fol(root->_right, cur-1, c);
-          trans_fol(root->_left, cur, c);
-          cout<<"# F"<<t<<" denotes "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE";
-          printvars(root);
-          cout<<") = "<<endl;
-          cout<<"     F"<<cur-1<<" (p, ALIVE";
-          print_alphabet(root->_right);
-          cout<<")"<<endl;
-          cout<<"     |"<<endl;
-          cout<<"     F"<<cur<<" (p, ALIVE";
-          print_alphabet(root->_left);
-          cout<<");"<<endl<<endl;
+          res += "(("+trans_fol(root->_right, t, c);
+          res += ") | (";
+          res += trans_fol(root->_left, t, c)+"))";
           break;
         case eAND:
-          c = c + 2;
-          cur = c;
-          trans_fol(root->_right, cur-1, c);
-          trans_fol(root->_left, cur, c);
-          cout<<"# F"<<t<<" denotes "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE";
-          printvars(root);
-          cout<<") = "<<endl;
-          cout<<"     F"<<cur-1<<" (p, ALIVE";
-          print_alphabet(root->_right);
-          cout<<")"<<endl;
-          cout<<"     &"<<endl;
-          cout<<"     F"<<cur<<" (p, ALIVE";
-          print_alphabet(root->_left);
-          cout<<");"<<endl<<endl;
+          res += "(("+trans_fol(root->_right, t, c);
+          res += ") & (";
+          res += trans_fol(root->_left, t, c)+"))";
           break;
         case eTRUE:
-          cout<<"# F"<<t<<" denotes TRUE "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE) = "<<endl;
-          cout<<"     true;"<<endl<<endl;
+          res += "(true)";
           break;
         case eFALSE:
-          cout<<"# F"<<t<<" denotes TRUE "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE) = "<<endl;
-          cout<<"     false;"<<endl<<endl;
+          res += "(false)";
           break;
         case 3:
-          cout<<"# F"<<t<<" denotes Atom "<<to_string (root).c_str ()<<endl;
-          cout<<"pred F"<<t<<" (var1 p, var2 ALIVE";
-          printvars(root);
-          cout<<") = "<<endl;
-          cout<<"     p >= 0 & p in ";
-          print_alphabet_no_comma(root);
-          // cout<<";"<<endl;
-          cout<<" & p in ALIVE"<<endl;
-          cout<<"     & all1 l:(l <= p => l in ALIVE);"<<endl<<endl;
+          if (t == 0)
+            ts = "("+to_string(t);
+          else
+            ts = "(x"+to_string(t);
+          res += ts+" in ";
+          res += alphabet_no_comma(root);
+          res +=")";
           break;
         default:
           break;
   }
+  // cout<<res<<endl;
+  return res;
 }
 
 string up(string a){
@@ -282,6 +231,55 @@ string up(string a){
 }
 
 
+
+char in[MAXN];
+
+int main (int argc, char ** argv)
+{
+  
+		string StrLine;
+		std::string input;
+    std::string format;
+		if(argc != 3){
+        cout<<"Usage: ./ltlf2fol format(NNF, BNF) filename"<<endl;
+        return 0;
+    }
+		input = argv[2];
+    format = argv[1];
+		ifstream myfile(input);
+		if (!myfile.is_open()) //判断文件是否存在及可读
+		{
+		    printf("unreadable file!");
+		    return -1;
+		}
+		getline(myfile, StrLine);
+		myfile.close(); //关闭文件
+    strcpy (in, StrLine.c_str());
+    printf ("#%s\n", in);
+    
+    ltl_formula *root = getAST (in);
+    ltl_formula *bnfroot = bnf (root);
+    ltl_formula *newroot;
+    printf ("#%s\n", to_string (bnfroot).c_str ());
+    if(format == "NNF"){
+      printf ("#NNF format\n");
+      newroot = nnf (bnfroot) ;   
+    }
+    else{
+      printf ("#BNF format\n");
+      newroot = bnfroot;
+    }
+    
+    printf ("#%s\n", to_string (newroot).c_str ());
+    ltlf2fol (newroot);
+    
+    
+
+    // printf ("%s\n", res.c_str ());
+    destroy_formula (root);
+    destroy_formula (newroot);
+    //destroy_formula (nnfroot);
+}
 
 
 

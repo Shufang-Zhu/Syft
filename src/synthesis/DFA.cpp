@@ -87,7 +87,7 @@ ifstream f(filename);
                     nvars = stoi(fields[3]);
                     //cout<<nvars<<endl;
                 }
-                if(strfind(line, "ALIVE")){
+                if(strfind(line, "variables") && !strfind(line, "number")){
                     split(variables, line, is_any_of(" "));
 
                 }
