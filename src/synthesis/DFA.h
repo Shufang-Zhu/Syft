@@ -39,6 +39,9 @@ class DFA
 
         Cudd* mgr;
 
+	// domain-spec separate construction
+	void construct_from_components(vbdd& S2S, vbdd& S2P, string filename);
+
     protected:
     private:
 		int nodes;

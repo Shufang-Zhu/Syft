@@ -146,6 +146,20 @@ ifstream f(filename);
     //print_vec(smtbdd);
 }
 
+void construct_from_components(vbbd& S2S, vbbd& S2P, string filename){
+  // Construct the BDD for the spec portion
+  read_from_file(filename);
+  nbits = state2bin(nstates-1).length();
+  construct_bdd_new();
+
+  // substitute P from res
+
+  // append S2S to res
+
+  // fix the other variables (nvars, nbits, init, etc)
+
+}
+
 void DFA::recur(int index, item tmp){
     if(smtbdd[index][0] == -1){
         while(tmp.size() < nbits + nvars)
