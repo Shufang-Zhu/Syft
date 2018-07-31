@@ -146,17 +146,58 @@ ifstream f(filename);
     //print_vec(smtbdd);
 }
 
-void construct_from_components(vbbd& S2S, vbbd& S2P, string filename){
+void DFA::construct_from_components(vbdd& S2S, vbdd& S2P, vbdd& Svars, vbdd& Ivars, vbdd& Ovars, string filename){
   // Construct the BDD for the spec portion
   read_from_file(filename);
   nbits = state2bin(nstates-1).length();
   construct_bdd_new();
 
-  // substitute P from res
+  // substitute P from res, first create a substitution/projection vector, then use the batch substitution function
+  vbdd subnProj;
+  // task dfa states
+  for (int i=0; i<nbits; i++){
+    subnProj.push_back(bddvars[i]);
+  }
+  // propositions (aka task variables)
+  assert(S2S.size()==nvars);
+  for (int i=0; i<nvars; i++){
+    // TODO: We need to make sure the variables line up!!!!
+    subnProj.push_back(S2S[i]);
+  }
+  // domain state variables
+  for (auto & v : Svars){
+    subnProj.push_back(v);
+  }
+  // human action variables
+  for (auto & v : Ivars){
+    subnProj.push_back(v);
+  }
+  // robot action variables
+  for (auto & v : Ovars){
+    subnProj.push_back(v);
+  }
+  for (int i=0; i<res.size(); i++){
+    res[i] = res[i].VectorCompose(S2P);
+  }  
 
   // append S2S to res
-
+  res.insert(res.end(), S2S.begin(), S2S.end());
+  
   // fix the other variables (nvars, nbits, init, etc)
+  bddvars.insert(bddvars.end(), Svars.begin(), Svars.end());
+  bddvars.insert(bddvars.end(), Ivars.begin(), Ovars.end());
+  bddvars.insert(bddvars.end(), Ivars.begin(), Ovars.end());
+  nbits = nbits + nvars + Svars.size(); // TODO: can we eliminate the propositions completely?
+  nvars = Ivars.size() + Ovars.size();
+  // TODO: make init and final states formulas
+  input.clear();
+  output.clear();
+  for (int i=0; i<Ivars.size(); i++){
+    input.push_back(i+nbits);
+  }
+  for (int i=0; i<Ovars.size(); i++){
+    output.push_back(i+nbits+Ivars.size());
+  }
 
 }
 
