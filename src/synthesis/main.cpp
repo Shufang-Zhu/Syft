@@ -17,7 +17,8 @@ int main(int argc, char ** argv){
         partfile = argv[2];
         flag = argv[3];
     }
-    syn test(filename, partfile);
+    Cudd* mgr = new Cudd();
+    syn test(mgr, filename, partfile);
 
     bool res = 0;
     std::unordered_map<unsigned, BDD> strategy;

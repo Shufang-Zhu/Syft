@@ -4,8 +4,13 @@ using namespace boost;
 
 //update test
 
-DFA::DFA(){
+DFA::DFA(Cudd* m){
+  mgr = m;
     //ctor
+}
+
+DFA::DFA(){
+  mgr = new Cudd();
 }
 
 DFA::~DFA()
@@ -15,8 +20,7 @@ DFA::~DFA()
 }
 void DFA::initialize(string filename, string partfile){
     //ctor
-    mgr = new Cudd();
-    read_from_file(filename);
+     read_from_file(filename);
     nbits = state2bin(nstates-1).length();
 
     //get_bdd();

@@ -1,15 +1,16 @@
 #include "syn.h"
 
-syn::syn(string filename, string partfile)
+syn::syn(Cudd* m, string filename, string partfile)
 {
     //ctor
 
     //Cudd *p = &mgr;
-    bdd.initialize(filename, partfile);
-    mgr = *(bdd.mgr);
+    bdd = new DFA(m);
+    bdd->initialize(filename, partfile);
+    mgr = m;
     initializer();
 
-    bdd.bdd2dot();
+    bdd->bdd2dot();
 
 }
 
@@ -19,13 +20,13 @@ syn::~syn()
 }
 
 void syn::initializer(){
-    for(int i = 0; i < bdd.nbits; i++){
-        BDD b = mgr.bddVar();
-        bdd.bddvars.push_back(b);
+    for(int i = 0; i < bdd->nbits; i++){
+        BDD b = mgr->bddVar();
+        bdd->bddvars.push_back(b);
     }
-    BDD tmp = mgr.bddZero();
-    for(int i = 0; i < bdd.finalstates.size(); i++){
-        BDD ac = state2bdd(bdd.finalstates[i]);
+    BDD tmp = mgr->bddZero();
+    for(int i = 0; i < bdd->finalstates.size(); i++){
+        BDD ac = state2bdd(bdd->finalstates[i]);
         tmp += ac;
     }
     W.push_back(tmp);
@@ -37,17 +38,17 @@ void syn::initializer(){
 
 BDD syn::state2bdd(int s){
     string bin = state2bin(s);
-    BDD b = mgr.bddOne();
-    int nzero = bdd.nbits - bin.length();
+    BDD b = mgr->bddOne();
+    int nzero = bdd->nbits - bin.length();
     //cout<<nzero<<endl;
     for(int i = 0; i < nzero; i++){
-        b *= !bdd.bddvars[i];
+        b *= !bdd->bddvars[i];
     }
     for(int i = 0; i < bin.length(); i++){
         if(bin[i] == '0')
-            b *= !bdd.bddvars[i+nzero];
+            b *= !bdd->bddvars[i+nzero];
         else
-            b *= bdd.bddvars[i+nzero];
+            b *= bdd->bddvars[i+nzero];
     }
     return b;
 
@@ -76,7 +77,7 @@ bool syn::fixpoint(){
 void syn::printBDDSat(BDD b){
 
   std::cout<<"sat with: ";
-  int max = bdd.nstates;
+  int max = bdd->nstates;
   
   for (int i=0; i<max; i++){
     if (b.Eval(state2bit(i)).IsOne()){
@@ -101,21 +102,21 @@ bool syn::realizablity(unordered_map<unsigned int, BDD>& IFstrategy){
 	//        Wprime.push_back(existsyn());
         //assert(cur = (W.size() - 1));
     }
-    if((Wprime[cur-1].Eval(state2bit(bdd.init))).IsOne()){
-        BDD O = mgr.bddOne();
+    if((Wprime[cur-1].Eval(state2bit(bdd->init))).IsOne()){
+        BDD O = mgr->bddOne();
 	//        vector<BDD> S2O;
-        for(int i = 0; i < bdd.output.size(); i++){
-            //cout<<bdd.output[i]<<endl;
-            O *= bdd.bddvars[bdd.output[i]];
+        for(int i = 0; i < bdd->output.size(); i++){
+            //cout<<bdd->output[i]<<endl;
+            O *= bdd->bddvars[bdd->output[i]];
         }
 	/*
-        O *= bdd.bddvars[bdd.nbits];
+        O *= bdd->bddvars[bdd->nbits];
         //naive synthesis
-        BDD cons = W[cur].SolveEqn(O, S2O, &yindex, bdd.output.size());
+        BDD cons = W[cur].SolveEqn(O, S2O, &yindex, bdd->output.size());
         strategy(S2O);
 	*/
 	
-        InputFirstSynthesis IFsyn(mgr);
+        InputFirstSynthesis IFsyn(*mgr);
         IFstrategy = IFsyn.synthesize(W[cur], O);
 
         return true;
@@ -127,10 +128,10 @@ bool syn::realizablity_variant(std::unordered_map<unsigned, BDD>& IFstrategy){
     BDD transducer;
     while(true){
         int index;
-        BDD O = mgr.bddOne();
-        for(int i = 0; i < bdd.output.size(); i++){
-            index = bdd.output[i];
-            O *= bdd.bddvars[index];
+        BDD O = mgr->bddOne();
+        for(int i = 0; i < bdd->output.size(); i++){
+            index = bdd->output[i];
+            O *= bdd->bddvars[index];
         }
 
         BDD tmp = W[cur] + existsyn_invariant(O, transducer);
@@ -139,28 +140,28 @@ bool syn::realizablity_variant(std::unordered_map<unsigned, BDD>& IFstrategy){
         if(fixpoint())
             break;
 
-        BDD I = mgr.bddOne();
-        for(int i = 0; i < bdd.input.size(); i++){
-            index = bdd.input[i];
-            I *= bdd.bddvars[index];
+        BDD I = mgr->bddOne();
+        for(int i = 0; i < bdd->input.size(); i++){
+            index = bdd->input[i];
+            I *= bdd->bddvars[index];
         }
 
         Wprime.push_back(univsyn_invariant(I));
-        if((Wprime[cur].Eval(state2bit(bdd.init))).IsOne()){
+        if((Wprime[cur].Eval(state2bit(bdd->init))).IsOne()){
             return true;
         }
 
     }
-    if((Wprime[cur-1].Eval(state2bit(bdd.init))).IsOne()){
+    if((Wprime[cur-1].Eval(state2bit(bdd->init))).IsOne()){
       // TODO: use ifstrategysynthesis
-        BDD O = mgr.bddOne();
+        BDD O = mgr->bddOne();
 	vector<BDD> S2O;
-        for(int i = 0; i < bdd.output.size(); i++){
-            O *= bdd.bddvars[bdd.output[i]];
+        for(int i = 0; i < bdd->output.size(); i++){
+            O *= bdd->bddvars[bdd->output[i]];
         }
-        O *= bdd.bddvars[bdd.nbits];
+        O *= bdd->bddvars[bdd->nbits];
         //naive synthesis
-        transducer.SolveEqn(O, S2O, outindex(), bdd.output.size());
+        transducer.SolveEqn(O, S2O, outindex(), bdd->output.size());
         strategy(S2O);
 
         return true;
@@ -174,29 +175,29 @@ void syn::strategy(vector<BDD>& S2O){
     vector<BDD> winning;
     for(int i = 0; i < S2O.size(); i++){
         //dumpdot(S2O[i], "S2O"+to_string(i));
-        for(int j = 0; j < bdd.output.size(); j++){
-            int index = bdd.output[j];
-            S2O[i] = S2O[i].Compose(bdd.bddvars[index], mgr.bddOne());
+        for(int j = 0; j < bdd->output.size(); j++){
+            int index = bdd->output[j];
+            S2O[i] = S2O[i].Compose(bdd->bddvars[index], mgr->bddOne());
         }
     }
 }
 
 int** syn::outindex(){
-    int outlength = bdd.output.size();
+    int outlength = bdd->output.size();
     int outwidth = 2;
     int **out = 0;
     out = new int*[outlength];
     for(int l = 0; l < outlength; l++){
         out[l] = new int[outwidth];
         out[l][0] = l;
-        out[l][1] = bdd.output[l];
+        out[l][1] = bdd->output[l];
     }
     return out;
 }
 
 int* syn::state2bit(int n){
-    int* s = new int[bdd.nbits];
-    for (int i=bdd.nbits-1; i>=0; i--){
+    int* s = new int[bdd->nbits];
+    for (int i=bdd->nbits-1; i>=0; i--){
       s[i] = n%2;
       n = n/2;
     }
@@ -205,19 +206,19 @@ int* syn::state2bit(int n){
 
 
 BDD syn::univsyn(){
-    BDD I = mgr.bddOne();
+    BDD I = mgr->bddOne();
     BDD tmp = Wprime[cur];
     int index;
-    int offset = bdd.nbits + bdd.nvars;
-    for(int i = 0; i < bdd.input.size(); i++){
-        index = bdd.input[i];
-        I *= bdd.bddvars[index];
+    int offset = bdd->nbits + bdd->nvars;
+    for(int i = 0; i < bdd->input.size(); i++){
+        index = bdd->input[i];
+        I *= bdd->bddvars[index];
     }
     //dumpdot(I, "W00");
     tmp = prime(tmp);
     //dumpdot(tmp, "s-s'"+to_string(cur));
-    for(int i = 0; i < bdd.nbits; i++){
-        tmp = tmp.Compose(bdd.res[i], offset+i);
+    for(int i = 0; i < bdd->nbits; i++){
+        tmp = tmp.Compose(bdd->res[i], offset+i);
         //dumpdot(tmp, "s.compose'"+to_string(i));
     }
     //dumpdot(tmp, "W00");
@@ -233,12 +234,12 @@ BDD syn::univsyn(){
 
 BDD syn::existsyn_invariant(BDD exist, BDD& transducer){
     BDD tmp = Wprime[cur];
-    int offset = bdd.nbits + bdd.nvars;
+    int offset = bdd->nbits + bdd->nvars;
 
     //dumpdot(I, "W00");
     tmp = prime(tmp);
-    for(int i = 0; i < bdd.nbits; i++){
-        tmp = tmp.Compose(bdd.res[i], offset+i);
+    for(int i = 0; i < bdd->nbits; i++){
+        tmp = tmp.Compose(bdd->res[i], offset+i);
     }
     transducer = tmp;
     tmp *= !Wprime[cur];
@@ -256,22 +257,22 @@ BDD syn::univsyn_invariant(BDD univ){
 }
 
 BDD syn::prime(BDD orign){
-    int offset = bdd.nbits + bdd.nvars;
+    int offset = bdd->nbits + bdd->nvars;
     BDD tmp = orign;
-    for(int i = 0; i < bdd.nbits; i++){
-        tmp = tmp.Compose(bdd.bddvars[i+offset], i);
+    for(int i = 0; i < bdd->nbits; i++){
+        tmp = tmp.Compose(bdd->bddvars[i+offset], i);
     }
     return tmp;
 }
 
 BDD syn::existsyn(){
-    BDD O = mgr.bddOne();
+    BDD O = mgr->bddOne();
     BDD tmp = W[cur];
     int index;
-    int offset = bdd.nbits + bdd.nvars;
-    for(int i = 0; i < bdd.output.size(); i++){
-        index = bdd.output[i];
-        O *= bdd.bddvars[index];
+    int offset = bdd->nbits + bdd->nvars;
+    for(int i = 0; i < bdd->output.size(); i++){
+        index = bdd->output[i];
+        O *= bdd->bddvars[index];
     }
     BDD elimoutput = tmp.ExistAbstract(O);
     return elimoutput;
@@ -282,7 +283,7 @@ void syn::dumpdot(BDD &b, string filename){
     FILE *fp = fopen(filename.c_str(), "w");
     vector<BDD> single(1);
     single[0] = b;
-	this->mgr.DumpDot(single, NULL, NULL, fp);
+	this->mgr->DumpDot(single, NULL, NULL, fp);
 	fclose(fp);
 }
 

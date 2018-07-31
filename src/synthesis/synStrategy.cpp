@@ -82,7 +82,8 @@ int main(int argc, char ** argv){
         filename = argv[1];
         partfile = argv[2];
     }
-    syn test(filename, partfile);
+    Cudd* mgr = new Cudd();
+    syn test(mgr, filename, partfile);
 
     std::unordered_map<unsigned, BDD> S2O;
     std::clock_t begint = std::clock();
@@ -95,7 +96,7 @@ int main(int argc, char ** argv){
 	  std::cout<<pair.first<<": ";
 	  test.printBDDSat(pair.second);
 	  }*/
-	playGame(test.bdd, S2O);
+      playGame(*(test.bdd), S2O);
     }
     else
       cout<<"unrealizable, time = "<<time<<endl;

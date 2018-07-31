@@ -12,7 +12,8 @@ typedef vector<BDD> vbdd;
 class DFA
 {
     public:
-        DFA();
+        DFA(Cudd* m);
+	DFA();
         virtual ~DFA();
         void initialize(string filename, string partfile);
         //void initialize(string filename, string partfile, Cudd& manager);
