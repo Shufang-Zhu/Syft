@@ -14,23 +14,27 @@ syn::syn(Cudd* m, string filename, string partfile)
 
 }
 
+syn::syn(Cudd* m, DFA* d)
+{
+    bdd = d;
+    mgr = m;
+    initializer();
+
+    bdd->bdd2dot();
+}
+
 syn::~syn()
 {
     //dtor
 }
 
 void syn::initializer(){
-    for(int i = 0; i < bdd->nbits; i++){
-        BDD b = mgr->bddVar();
-        bdd->bddvars.push_back(b);
-    }
-    BDD tmp = mgr->bddZero();
-    for(int i = 0; i < bdd->finalstates.size(); i++){
-        BDD ac = state2bdd(bdd->finalstates[i]);
-        tmp += ac;
-    }
-    W.push_back(tmp);
-    Wprime.push_back(tmp);
+  for(int i = 0; i < bdd->nbits; i++){
+    BDD b = mgr->bddVar();
+    bdd->bddvars.push_back(b);
+  }
+    W.push_back(bdd->finalstatesBDD);
+    Wprime.push_back(bdd->finalstatesBDD);
     cur = 0;
 
 
@@ -121,6 +125,9 @@ bool syn::realizablity(unordered_map<unsigned int, BDD>& IFstrategy){
 
         return true;
     }
+    std::cout<<"unrealizable, winning set: "<<std::endl;
+    std::cout<<Wprime[Wprime.size()-1]<<std::endl;
+    assert(false);
     return false;
 }
 
@@ -147,12 +154,12 @@ bool syn::realizablity_variant(std::unordered_map<unsigned, BDD>& IFstrategy){
         }
 
         Wprime.push_back(univsyn_invariant(I));
-        if((Wprime[cur].Eval(state2bit(bdd->init))).IsOne()){
+        if((Wprime[cur].Eval(bdd->initbv)).IsOne()){
             return true;
         }
 
     }
-    if((Wprime[cur-1].Eval(state2bit(bdd->init))).IsOne()){
+    if((Wprime[cur-1].Eval(bdd->initbv)).IsOne()){
       // TODO: use ifstrategysynthesis
         BDD O = mgr->bddOne();
 	vector<BDD> S2O;

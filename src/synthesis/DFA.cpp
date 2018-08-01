@@ -28,6 +28,13 @@ void DFA::initialize(string filename, string partfile){
     //construct_bdd();
     construct_bdd_new();
     read_partfile(partfile);
+
+    initbv = new int[nbits];
+    int temp = init;
+    for (int i=nbits-1; i>=0; i--){
+      initbv[i] = temp%2;
+      temp = temp/2;
+    }
 }
 
 
@@ -150,12 +157,15 @@ ifstream f(filename);
     //print_vec(smtbdd);
 }
 
-void DFA::construct_from_components(vbdd& S2S, vbdd& S2P, vbdd& Svars, vbdd& Ivars, vbdd& Ovars, string filename){
+void DFA::construct_from_comp_front(string filename){
   // Construct the BDD for the spec portion
   read_from_file(filename);
   nbits = state2bin(nstates-1).length();
   construct_bdd_new();
+}
 
+void DFA::construct_from_comp_back(vbdd& S2S, vbdd& S2P, vbdd& Svars, vbdd& Ivars, vbdd& Ovars, std::vector<int> IS){
+  
   // substitute P from res, first create a substitution/projection vector, then use the batch substitution function
   vbdd subnProj;
   // task dfa states
@@ -163,10 +173,10 @@ void DFA::construct_from_components(vbdd& S2S, vbdd& S2P, vbdd& Svars, vbdd& Iva
     subnProj.push_back(bddvars[i]);
   }
   // propositions (aka task variables)
-  assert(S2S.size()==nvars);
+  assert(S2P.size()==nvars);
   for (int i=0; i<nvars; i++){
     // TODO: We need to make sure the variables line up!!!!
-    subnProj.push_back(S2S[i]);
+    subnProj.push_back(S2P[i]);
   }
   // domain state variables
   for (auto & v : Svars){
@@ -181,19 +191,37 @@ void DFA::construct_from_components(vbdd& S2S, vbdd& S2P, vbdd& Svars, vbdd& Iva
     subnProj.push_back(v);
   }
   for (int i=0; i<res.size(); i++){
-    res[i] = res[i].VectorCompose(S2P);
+    res[i] = res[i].VectorCompose(subnProj);
   }  
 
+  // append the propositions to res
+  res.insert(res.end(), S2P.begin(), S2P.end());
   // append S2S to res
   res.insert(res.end(), S2S.begin(), S2S.end());
   
   // fix the other variables (nvars, nbits, init, etc)
+  std::cout<<"constructing bdd with "<<bddvars.size()<<"variables"<<std::endl;
   bddvars.insert(bddvars.end(), Svars.begin(), Svars.end());
-  bddvars.insert(bddvars.end(), Ivars.begin(), Ovars.end());
-  bddvars.insert(bddvars.end(), Ivars.begin(), Ovars.end());
+  bddvars.insert(bddvars.end(), Ivars.begin(), Ivars.end());
+  bddvars.insert(bddvars.end(), Ovars.begin(), Ovars.end());
+  std::cout<<"constructing bdd with "<<bddvars.size()<<"variables"<<std::endl;
+  // make init bitvector (final states is a bdd, does not need change)
+  initbv = new int[nbits+nvars+Svars.size()];
+  int temp = init;
+  for (int i=nbits-1; i>=0; i--){
+    initbv[i] = temp%2;
+    temp = temp/2;
+  }
+  for (int i=0; i<nvars; i++){
+    initbv[i+nbits] = 0;
+  }
+  for (int i=0; i<IS.size(); i++){
+    initbv[i+nbits+nvars] = IS[i];
+  }
   nbits = nbits + nvars + Svars.size(); // TODO: can we eliminate the propositions completely?
   nvars = Ivars.size() + Ovars.size();
-  // TODO: make init and final states formulas
+
+  // add indices for input and output
   input.clear();
   output.clear();
   for (int i=0; i<Ivars.size(); i++){
@@ -354,6 +382,7 @@ void DFA::construct_bdd_new(){
         bddvars.push_back(b);
         //dumpdot(b, to_string(i));
     }
+    std::cout<<"constructing bdd with "<<bddvars.size()<<"variables"<<std::endl;
 
     for(int i = 0; i < nbits; i++){
         BDD d = mgr->bddZero();
@@ -388,6 +417,28 @@ void DFA::construct_bdd_new(){
          //dumpdot(root, "res "+to_string(i));
     }
 
+    finalstatesBDD = mgr->bddZero();
+    for(int i = 0; i < finalstates.size(); i++){
+        BDD ac = state2bdd(finalstates[i]);
+        finalstatesBDD += ac;
+    }
+}
+
+BDD DFA::state2bdd(int s){
+    string bin = state2bin(s);
+    BDD b = mgr->bddOne();
+    int nzero = nbits - bin.length();
+    //cout<<nzero<<endl;
+    for(int i = 0; i < nzero; i++){
+        b *= !bddvars[i];
+    }
+    for(int i = 0; i < bin.length(); i++){
+        if(bin[i] == '0')
+            b *= !bddvars[i+nzero];
+        else
+            b *= bddvars[i+nzero];
+    }
+    return b;
 
 }
 

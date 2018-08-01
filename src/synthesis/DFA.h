@@ -22,12 +22,15 @@ class DFA
         void construct_bdd();
         void bdd2dot();
         void dumpdot(BDD &b, string filename);
+	BDD state2bdd(int s);
         int nbits;
         int init;
+	int* initbv;
         int nstates;
 
         int nvars;
         vector<int> finalstates;
+	BDD finalstatesBDD;
         vector<BDD> res;
         vector<BDD> bddvars;
         vector<int> input;
@@ -41,7 +44,10 @@ class DFA
         Cudd* mgr;
 
 	// domain-spec separate construction
-	void construct_from_components(vbdd& S2S, vbdd& S2P, vbdd& Svars, vbdd& Ivars, vbdd& Ovars, string filename);
+	// Front need to be called before variable construction for domain
+	// back is called after the components are constructed
+	void construct_from_comp_front(string filename);
+	void construct_from_comp_back(vbdd& S2S, vbdd& S2P, vbdd& Svars, vbdd& Ivars, vbdd& Ovars, std::vector<int> IS);
 
     protected:
     private:

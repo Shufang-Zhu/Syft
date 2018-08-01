@@ -9,6 +9,7 @@ class syn
 {
     public:
         syn(Cudd* m, string filename, string partfile);
+	syn(Cudd* m, DFA* d);
         bool realizablity(unordered_map<unsigned int, BDD>& IFstrategy);
         bool realizablity_variant(unordered_map<unsigned int, BDD>& IFstrategy);
         virtual ~syn();
