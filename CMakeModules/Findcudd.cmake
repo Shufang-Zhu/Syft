@@ -23,6 +23,7 @@ if(NOT CUDD_ROOT AND DEFINED ENV{CUDD_ROOT})
 	mark_as_advanced(CUDD_ROOT)
 endif()
 
+set(CUDD_ROOT "$ENV{HOME}/install")
 # Search path for nonstandard locations
 if(CUDD_ROOT)
 	set(CUDD_INCLUDE_PATH PATHS "${CUDD_ROOT}/include" NO_DEFAULT_PATH)
