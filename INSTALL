@@ -6,7 +6,7 @@ Compilation Instructions for Syft using CMake
     https://github.com/ivmai/cudd.git
 
 0.2 Install CUDD:
-    ./configure --enable-slient-rules -enable-obj --enable-dddmp
+    ./configure --enable-slient-rules --enable-obj --enable-dddmp --prefix=[install location]
     sudo make install
 
     If you get an error about aclocal, this might be due to either
