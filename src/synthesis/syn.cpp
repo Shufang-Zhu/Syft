@@ -106,7 +106,7 @@ bool syn::realizablity(unordered_map<unsigned int, BDD>& IFstrategy){
 	//        Wprime.push_back(existsyn());
         //assert(cur = (W.size() - 1));
     }
-    if((Wprime[cur-1].Eval(state2bit(bdd->init))).IsOne()){
+    if(Wprime[cur-1].Eval(bdd->initbv).IsOne()){
         BDD O = mgr->bddOne();
 	//        vector<BDD> S2O;
         for(int i = 0; i < bdd->output.size(); i++){
