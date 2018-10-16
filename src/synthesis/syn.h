@@ -8,14 +8,18 @@ using namespace std;
 class syn
 {
     public:
-        syn(string filename, string partfile);
-        bool realizablity();
-        bool realizablity_variant();
+        syn(Cudd* m, string filename, string partfile);
+	syn(Cudd* m, DFA* d);
+        bool realizablity(unordered_map<unsigned int, BDD>& IFstrategy);
+        bool realizablity_variant(unordered_map<unsigned int, BDD>& IFstrategy);
         virtual ~syn();
-    protected:
+	void printBDDSat(BDD b);
+
+	DFA* bdd;
+
+ protected:
     private:
-        Cudd mgr;
-        DFA bdd;
+        Cudd* mgr;
         int cur = 0;
         bool fixpoint();
         vector<BDD> W;

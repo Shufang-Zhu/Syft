@@ -29,18 +29,13 @@
 *.exe
 *.out
 *.app
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 384ce1c039ef3cc4586804ee067598c3fb138c47
+
 bdd
 ltlf2ws1s
 mona
 ltlf2fol
 ltlf2fol_old
 
-#temporary files
 *~
 
 #testing files
@@ -50,7 +45,7 @@ ltlf2fol_old
 *.part
 *.ltl
 *.fol
-<<<<<<< HEAD
->>>>>>> first commit
 =======
->>>>>>> 384ce1c039ef3cc4586804ee067598c3fb138c47
+
+#build files
+build/

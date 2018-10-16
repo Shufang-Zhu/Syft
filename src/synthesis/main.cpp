@@ -17,13 +17,15 @@ int main(int argc, char ** argv){
         partfile = argv[2];
         flag = argv[3];
     }
-    syn test(filename, partfile);
+    Cudd* mgr = new Cudd();
+    syn test(mgr, filename, partfile);
 
     bool res = 0;
+    std::unordered_map<unsigned, BDD> strategy;
     if(flag == "1")
-        res = test.realizablity_variant();
+        res = test.realizablity_variant(strategy);
     else
-        res = test.realizablity();
+        res = test.realizablity(strategy);
 
     if(res)
         cout<<"realizable"<<endl;
