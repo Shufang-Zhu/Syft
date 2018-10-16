@@ -45,6 +45,10 @@ mona
 *.ltlf
 *.part
 *.ltl
+
+#build files
+build/
+
 <<<<<<< HEAD
 >>>>>>> first commit
 =======
