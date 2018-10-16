@@ -87,7 +87,7 @@ int main(int argc, char ** argv){
 
     std::unordered_map<unsigned, BDD> S2O;
     std::clock_t begint = std::clock();
-    bool res = test.realizablity(S2O);
+    bool res = test.realizablity_sys(S2O);
     double time = double(std::clock()-begint) / CLOCKS_PER_SEC;
 
     if(res){

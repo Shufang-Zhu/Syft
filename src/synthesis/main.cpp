@@ -23,9 +23,9 @@ int main(int argc, char ** argv){
     bool res = 0;
     std::unordered_map<unsigned, BDD> strategy;
     if(flag == "1")
-        res = test.realizablity_variant(strategy);
+        res = test.realizablity_env(strategy);
     else
-        res = test.realizablity(strategy);
+        res = test.realizablity_sys(strategy);
 
     if(res)
         cout<<"realizable"<<endl;

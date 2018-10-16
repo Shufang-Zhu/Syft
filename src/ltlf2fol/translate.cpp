@@ -14,8 +14,8 @@ int main (int argc, char ** argv)
 		std::string input;
     std::string format;
 		assert(argc == 3);
-		input = argv[1];
-    format = argv[2];
+		input = argv[2];
+    format = argv[1];
 		ifstream myfile(input);
 		if (!myfile.is_open()) //判断文件是否存在及可读
 		{

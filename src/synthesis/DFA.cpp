@@ -1,4 +1,5 @@
 #include "DFA.h"
+#include <string>
 using namespace std;
 using namespace boost;
 
@@ -20,7 +21,7 @@ DFA::~DFA()
 }
 void DFA::initialize(string filename, string partfile){
     //ctor
-     read_from_file(filename);
+    read_from_file(filename);
     nbits = state2bin(nstates-1).length();
 
     //get_bdd();
@@ -39,7 +40,7 @@ void DFA::initialize(string filename, string partfile){
 
 
 void DFA::read_partfile(string partfile){
-    ifstream f(partfile);
+    ifstream f(partfile.c_str());
     vector<string> inputs;
     vector<string> outputs;
     string line;
@@ -84,7 +85,7 @@ void DFA::read_partfile(string partfile){
 }
 
 void DFA::read_from_file(string filename){
-ifstream f(filename);
+ifstream f(filename.c_str());
 	if(f.is_open()){
 		bool flag = 0;
 		string line;

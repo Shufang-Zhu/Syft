@@ -3,10 +3,10 @@ Compilation Instructions for Syft using CMake
 ==== Install CUDD ====
 
 0.1 Make sure CUDD is installed. CUDD can be found at:
-    https://github.com/ivmai/cudd.git
+    https://github.com/KavrakiLab/cudd.git
 
 0.2 Install CUDD:
-    ./configure --enable-slient-rules --enable-obj --enable-dddmp --prefix=[install location]
+    ./configure --enable-silent-rules --enable-obj --enable-dddmp --prefix=[install location]
     sudo make install
 
     If you get an error about aclocal, this might be due to either

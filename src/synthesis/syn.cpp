@@ -91,26 +91,32 @@ void syn::printBDDSat(BDD b){
   std::cout<<std::endl;
 }
 
-bool syn::realizablity(unordered_map<unsigned int, BDD>& IFstrategy){
+bool syn::realizablity_sys(unordered_map<unsigned int, BDD>& IFstrategy){
     while(true){
-        //cout<<"interative"<<endl;
-        //dumpdot(W[cur], "W"+to_string(cur));
-        //dumpdot(Wprime[cur], "Wprme"+to_string(cur));
-        BDD tmp = W[cur] + univsyn();
+        BDD I = mgr->bddOne();
+        int index;
+        for(int i = 0; i < bdd->input.size(); i++){
+            index = bdd->input[i];
+            I *= bdd->bddvars[index];
+        }
+
+        BDD tmp = W[cur] + univsyn_sys(I);
         W.push_back(tmp);
         cur++;
-        //dumpdot(W[cur], "W"+to_string(cur));
-	Wprime.push_back(existsyn());
+
+        BDD O = mgr->bddOne();
+        for(int i = 0; i < bdd->output.size(); i++){
+            index = bdd->output[i];
+            O *= bdd->bddvars[index];
+        }
+
+	    Wprime.push_back(existsyn_sys(O));
         if(fixpoint())
             break;
-	//        Wprime.push_back(existsyn());
-        //assert(cur = (W.size() - 1));
     }
     if(Wprime[cur-1].Eval(bdd->initbv).IsOne()){
         BDD O = mgr->bddOne();
-	//        vector<BDD> S2O;
         for(int i = 0; i < bdd->output.size(); i++){
-            //cout<<bdd->output[i]<<endl;
             O *= bdd->bddvars[bdd->output[i]];
         }
 	/*
@@ -127,11 +133,11 @@ bool syn::realizablity(unordered_map<unsigned int, BDD>& IFstrategy){
     }
     std::cout<<"unrealizable, winning set: "<<std::endl;
     std::cout<<Wprime[Wprime.size()-1]<<std::endl;
-    assert(false);
+    // assert(false);
     return false;
 }
 
-bool syn::realizablity_variant(std::unordered_map<unsigned, BDD>& IFstrategy){
+bool syn::realizablity_env(std::unordered_map<unsigned, BDD>& IFstrategy){
     BDD transducer;
     while(true){
         int index;
@@ -141,7 +147,7 @@ bool syn::realizablity_variant(std::unordered_map<unsigned, BDD>& IFstrategy){
             O *= bdd->bddvars[index];
         }
 
-        BDD tmp = W[cur] + existsyn_invariant(O, transducer);
+        BDD tmp = W[cur] + existsyn_env(O, transducer);
         W.push_back(tmp);
         cur++;
         if(fixpoint())
@@ -153,7 +159,7 @@ bool syn::realizablity_variant(std::unordered_map<unsigned, BDD>& IFstrategy){
             I *= bdd->bddvars[index];
         }
 
-        Wprime.push_back(univsyn_invariant(I));
+        Wprime.push_back(univsyn_env(I));
         if((Wprime[cur].Eval(bdd->initbv)).IsOne()){
             return true;
         }
@@ -162,7 +168,7 @@ bool syn::realizablity_variant(std::unordered_map<unsigned, BDD>& IFstrategy){
     if((Wprime[cur-1].Eval(bdd->initbv)).IsOne()){
       // TODO: use ifstrategysynthesis
         BDD O = mgr->bddOne();
-	vector<BDD> S2O;
+	    vector<BDD> S2O;
         for(int i = 0; i < bdd->output.size(); i++){
             O *= bdd->bddvars[bdd->output[i]];
         }
@@ -212,34 +218,23 @@ int* syn::state2bit(int n){
 }
 
 
-BDD syn::univsyn(){
-    BDD I = mgr->bddOne();
+BDD syn::univsyn_sys(BDD univ){
+
     BDD tmp = Wprime[cur];
-    int index;
     int offset = bdd->nbits + bdd->nvars;
-    for(int i = 0; i < bdd->input.size(); i++){
-        index = bdd->input[i];
-        I *= bdd->bddvars[index];
-    }
-    //dumpdot(I, "W00");
     tmp = prime(tmp);
-    //dumpdot(tmp, "s-s'"+to_string(cur));
     for(int i = 0; i < bdd->nbits; i++){
         tmp = tmp.Compose(bdd->res[i], offset+i);
-        //dumpdot(tmp, "s.compose'"+to_string(i));
     }
-    //dumpdot(tmp, "W00");
 
     tmp *= !Wprime[cur];
 
-    BDD eliminput = tmp.UnivAbstract(I);
-    //dumpdot(eliminput, "W01");
-    //dumpdot(eliminput, "EU"+to_string(cur));
+    BDD eliminput = tmp.UnivAbstract(univ);
     return eliminput;
 
 }
 
-BDD syn::existsyn_invariant(BDD exist, BDD& transducer){
+BDD syn::existsyn_env(BDD exist, BDD& transducer){
     BDD tmp = Wprime[cur];
     int offset = bdd->nbits + bdd->nvars;
 
@@ -255,7 +250,7 @@ BDD syn::existsyn_invariant(BDD exist, BDD& transducer){
 
 }
 
-BDD syn::univsyn_invariant(BDD univ){
+BDD syn::univsyn_env(BDD univ){
 
     BDD tmp = W[cur];
     BDD elimuniv = tmp.UnivAbstract(univ);
@@ -272,16 +267,10 @@ BDD syn::prime(BDD orign){
     return tmp;
 }
 
-BDD syn::existsyn(){
-    BDD O = mgr->bddOne();
+BDD syn::existsyn_sys(BDD exist){
+
     BDD tmp = W[cur];
-    int index;
-    int offset = bdd->nbits + bdd->nvars;
-    for(int i = 0; i < bdd->output.size(); i++){
-        index = bdd->output[i];
-        O *= bdd->bddvars[index];
-    }
-    BDD elimoutput = tmp.ExistAbstract(O);
+    BDD elimoutput = tmp.ExistAbstract(exist);
     return elimoutput;
 
 }

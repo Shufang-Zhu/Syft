@@ -10,8 +10,8 @@ class syn
     public:
         syn(Cudd* m, string filename, string partfile);
 	syn(Cudd* m, DFA* d);
-        bool realizablity(unordered_map<unsigned int, BDD>& IFstrategy);
-        bool realizablity_variant(unordered_map<unsigned int, BDD>& IFstrategy);
+        bool realizablity_sys(unordered_map<unsigned int, BDD>& IFstrategy);
+        bool realizablity_env(unordered_map<unsigned int, BDD>& IFstrategy);
         virtual ~syn();
 	void printBDDSat(BDD b);
 
@@ -31,10 +31,10 @@ class syn
         int** outindex();
         void dumpdot(BDD &b, string filename);
         BDD prime(BDD orign);
-        BDD univsyn();
-        BDD existsyn();
-        BDD univsyn_invariant(BDD univ);
-        BDD existsyn_invariant(BDD exist, BDD& transducer);
+        BDD univsyn_sys(BDD univ);
+        BDD existsyn_sys(BDD exist);
+        BDD univsyn_env(BDD univ);
+        BDD existsyn_env(BDD exist, BDD& transducer);
         void strategy(vector<BDD>& S2O);
 };
 
