@@ -10,7 +10,7 @@ syn::syn(Cudd* m, string filename, string partfile)
     mgr = m;
     initializer();
 
-    bdd->bdd2dot();
+    //bdd->bdd2dot();
 
 }
 
@@ -131,8 +131,8 @@ bool syn::realizablity_sys(unordered_map<unsigned int, BDD>& IFstrategy){
 
         return true;
     }
-    std::cout<<"unrealizable, winning set: "<<std::endl;
-    std::cout<<Wprime[Wprime.size()-1]<<std::endl;
+    //std::cout<<"unrealizable, winning set: "<<std::endl;
+    //std::cout<<Wprime[Wprime.size()-1]<<std::endl;
     // assert(false);
     return false;
 }
@@ -168,14 +168,17 @@ bool syn::realizablity_env(std::unordered_map<unsigned, BDD>& IFstrategy){
     if((Wprime[cur-1].Eval(bdd->initbv)).IsOne()){
       // TODO: use ifstrategysynthesis
         BDD O = mgr->bddOne();
-	    vector<BDD> S2O;
+	    //vector<BDD> S2O;
         for(int i = 0; i < bdd->output.size(); i++){
             O *= bdd->bddvars[bdd->output[i]];
         }
         O *= bdd->bddvars[bdd->nbits];
+
+	InputFirstSynthesis IFsyn(*mgr);
+        IFstrategy = IFsyn.synthesize(W[cur], O);
         //naive synthesis
-        transducer.SolveEqn(O, S2O, outindex(), bdd->output.size());
-        strategy(S2O);
+        //transducer.SolveEqn(O, S2O, outindex(), bdd->output.size());
+        //strategy(S2O);
 
         return true;
     }

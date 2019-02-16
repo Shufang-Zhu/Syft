@@ -64,10 +64,14 @@ void DFA::read_partfile(string partfile){
     f.close();
     set<string> input_set;
     set<string> output_set;
-    for(int i = 1; i < inputs.size(); i++)
-        input_set.insert(inputs[i]);
-    for(int i = 1; i < outputs.size(); i++)
-        output_set.insert(outputs[i]);
+    for(int i = 1; i < inputs.size(); i++){
+        string c = boost::algorithm::to_upper_copy(inputs[i]);
+        input_set.insert(c);
+    }
+    for(int i = 1; i < outputs.size(); i++){
+        string c = boost::algorithm::to_upper_copy(outputs[i]);
+        output_set.insert(c);
+    }
 
     for(int i = 1; i < variables.size(); i++){
         if(input_set.find(variables[i]) != input_set.end())
@@ -201,11 +205,11 @@ void DFA::construct_from_comp_back(vbdd& S2S, vbdd& S2P, vbdd& Svars, vbdd& Ivar
   res.insert(res.end(), S2S.begin(), S2S.end());
   
   // fix the other variables (nvars, nbits, init, etc)
-  std::cout<<"constructing bdd with "<<bddvars.size()<<"variables"<<std::endl;
+  //std::cout<<"constructing bdd with "<<bddvars.size()<<"variables"<<std::endl;
   bddvars.insert(bddvars.end(), Svars.begin(), Svars.end());
   bddvars.insert(bddvars.end(), Ivars.begin(), Ivars.end());
   bddvars.insert(bddvars.end(), Ovars.begin(), Ovars.end());
-  std::cout<<"constructing bdd with "<<bddvars.size()<<"variables"<<std::endl;
+  //std::cout<<"constructing bdd with "<<bddvars.size()<<"variables"<<std::endl;
   // make init bitvector (final states is a bdd, does not need change)
   initbv = new int[nbits+nvars+Svars.size()];
   int temp = init;
@@ -383,7 +387,7 @@ void DFA::construct_bdd_new(){
         bddvars.push_back(b);
         //dumpdot(b, to_string(i));
     }
-    std::cout<<"constructing bdd with "<<bddvars.size()<<"variables"<<std::endl;
+   // std::cout<<"constructing bdd with "<<bddvars.size()<<"variables"<<std::endl;
 
     for(int i = 0; i < nbits; i++){
         BDD d = mgr->bddZero();

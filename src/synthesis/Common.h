@@ -7,5 +7,6 @@
 #include <stdlib.h>
 #include <set>
 #include <iostream>
+#include <chrono>
 
 using namespace CUDD;
