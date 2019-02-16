@@ -23,7 +23,7 @@ int main(int argc, char ** argv){
     string autfile;
     string starting_player;
     if(argc != 4){
-        cout<<"Usage: ./FSyft DFAfile Partfile Starting_player(0: system, 1: environment)"<<endl;
+        cout<<"Usage: ./Syft DFAfile Partfile Starting_player(0: system, 1: environment)"<<endl;
         return 0;
     }
     else{
