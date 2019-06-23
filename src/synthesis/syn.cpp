@@ -119,12 +119,6 @@ bool syn::realizablity_sys(unordered_map<unsigned int, BDD>& IFstrategy){
         for(int i = 0; i < bdd->output.size(); i++){
             O *= bdd->bddvars[bdd->output[i]];
         }
-	/*
-        O *= bdd->bddvars[bdd->nbits];
-        //naive synthesis
-        BDD cons = W[cur].SolveEqn(O, S2O, &yindex, bdd->output.size());
-        strategy(S2O);
-	*/
 	
         InputFirstSynthesis IFsyn(*mgr);
         IFstrategy = IFsyn.synthesize(W[cur], O);
@@ -149,9 +143,7 @@ bool syn::realizablity_env(std::unordered_map<unsigned, BDD>& IFstrategy){
 
         BDD tmp = W[cur] + existsyn_env(O, transducer);
         W.push_back(tmp);
-        cur++;
-        if(fixpoint())
-            break;
+        cur++;  
 
         BDD I = mgr->bddOne();
         for(int i = 0; i < bdd->input.size(); i++){
@@ -160,25 +152,19 @@ bool syn::realizablity_env(std::unordered_map<unsigned, BDD>& IFstrategy){
         }
 
         Wprime.push_back(univsyn_env(I));
-        if((Wprime[cur].Eval(bdd->initbv)).IsOne()){
-            return true;
-        }
+        if(fixpoint())
+            break;
 
     }
     if((Wprime[cur-1].Eval(bdd->initbv)).IsOne()){
-      // TODO: use ifstrategysynthesis
         BDD O = mgr->bddOne();
-	    //vector<BDD> S2O;
         for(int i = 0; i < bdd->output.size(); i++){
             O *= bdd->bddvars[bdd->output[i]];
         }
         O *= bdd->bddvars[bdd->nbits];
 
-	InputFirstSynthesis IFsyn(*mgr);
-        IFstrategy = IFsyn.synthesize(W[cur], O);
-        //naive synthesis
-        //transducer.SolveEqn(O, S2O, outindex(), bdd->output.size());
-        //strategy(S2O);
+	    InputFirstSynthesis IFsyn(*mgr);
+        IFstrategy = IFsyn.synthesize(transducer, O);
 
         return true;
     }
