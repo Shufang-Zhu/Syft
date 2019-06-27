@@ -38,7 +38,7 @@ typedef void* yyscan_t;
 }
 
 %left TOKEN_EQUIV
-%left TOKEN_IMPLIES
+%right TOKEN_IMPLIES
 %left TOKEN_OR
 %left TOKEN_AND
 %left TOKEN_RELEASE
