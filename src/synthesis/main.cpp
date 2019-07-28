@@ -42,7 +42,7 @@ int main(int argc, char ** argv){
         res = test.realizablity_env(strategy);
     else
         res = test.realizablity_sys(strategy);
-    cout<<"BDD nodes: "<<mgr->ReadNodeCount()<<endl;
+    
     if(res)
         cout<<"realizable"<<endl;
     else
