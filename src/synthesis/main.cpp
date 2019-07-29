@@ -34,6 +34,13 @@ int main(int argc, char ** argv){
     Cudd* mgr = new Cudd();
     autfile = get_DFAfile(filename);
     syn test(mgr, autfile, partfile);
+    clock_t c_dfa_end = clock();
+    auto t_dfa_end = chrono::high_resolution_clock::now();
+    std::cout << "DFA CPU time used: "
+              << 1000.0 * (c_dfa_end-c_start) / CLOCKS_PER_SEC << " ms\n"
+              << "DFA wall clock time passed: "
+              << std::chrono::duration<double, std::milli>(t_dfa_end-t_start).count()
+              << " ms\n";
 
     bool res = 0;
     std::unordered_map<unsigned, BDD> strategy;
@@ -42,7 +49,7 @@ int main(int argc, char ** argv){
         res = test.realizablity_env(strategy);
     else
         res = test.realizablity_sys(strategy);
-    
+
     if(res)
         cout<<"realizable"<<endl;
     else
