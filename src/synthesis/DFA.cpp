@@ -22,12 +22,14 @@ DFA::~DFA()
 void DFA::initialize(string filename, string partfile){
     //ctor
     read_from_file(filename);
+    cout<<"The number of explicit states: "<<nstates<<endl;
     nbits = state2bin(nstates-1).length();
 
     //get_bdd();
     //print_vec(bdd);
     //construct_bdd();
     construct_bdd_new();
+    cout<<"The number of state variables: "<<nbits<<endl;
     read_partfile(partfile);
 
     initbv = new int[nbits];
@@ -419,7 +421,7 @@ void DFA::construct_bdd_new(){
             res[i] = res[i] + tmp;
             //dumpdot(res[i], "res "+to_string(i));
         }
-         //dumpdot(root, "res "+to_string(i));
+        dumpdot(res[i], "res "+to_string(i));
     }
 
     finalstatesBDD = mgr->bddZero();
