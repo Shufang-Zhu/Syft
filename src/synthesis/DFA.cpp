@@ -421,7 +421,7 @@ void DFA::construct_bdd_new(){
             res[i] = res[i] + tmp;
             //dumpdot(res[i], "res "+to_string(i));
         }
-        dumpdot(res[i], "res "+to_string(i));
+        //dumpdot(res[i], "res "+to_string(i));
     }
 
     finalstatesBDD = mgr->bddZero();
