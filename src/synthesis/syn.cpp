@@ -92,7 +92,9 @@ void syn::printBDDSat(BDD b){
 }
 
 bool syn::realizablity_sys(unordered_map<unsigned int, BDD>& IFstrategy){
+    int iteration = 0;
     while(true){
+        iteration = iteration + 1;
         BDD I = mgr->bddOne();
         int index;
         for(int i = 0; i < bdd->input.size(); i++){
@@ -124,7 +126,7 @@ bool syn::realizablity_sys(unordered_map<unsigned int, BDD>& IFstrategy){
         IFstrategy = IFsyn.synthesize(W[cur], O);
         vector<CUDD::BDD> tmp = bdd->res;
         tmp.push_back(bdd->finalstatesBDD);
-
+        cout<<"Iteration: "<<iteration<<endl;
         cout<<"BDD nodes: "<<mgr->nodeCount(tmp)<<endl;
 
         return true;
@@ -134,7 +136,7 @@ bool syn::realizablity_sys(unordered_map<unsigned int, BDD>& IFstrategy){
     // assert(false);
     vector<CUDD::BDD> tmp = bdd->res;
     tmp.push_back(bdd->finalstatesBDD);
-
+    cout<<"Iteration: "<<iteration<<endl;
     cout<<"BDD nodes: "<<mgr->nodeCount(tmp)<<endl;
     return false;
 }
