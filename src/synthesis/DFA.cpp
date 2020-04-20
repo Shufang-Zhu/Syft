@@ -272,7 +272,7 @@ vbdd DFA::try_get(int index){
     vbdd b;
     if(smtbdd[index][0] == -1){
         int s = smtbdd[index][1];
-        string bins = state2bin(s);
+        string bins = state2bin(s-1);
         for(int m = 0; m < nbits - bins.size(); m++){
             b.push_back(mgr->bddZero());
         }
