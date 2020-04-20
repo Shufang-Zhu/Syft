@@ -43,9 +43,9 @@ int main(int argc, char ** argv){
     syn test(mgr, autfile, partfile);
     clock_t c_dfa_end = clock();
     auto t_dfa_end = chrono::high_resolution_clock::now();
-    std::cout << "DFA CPU time used: "
+    std::cout << "Symbolic DFA construction CPU time used: "
               << 1000.0 * (c_dfa_end-c_start) / CLOCKS_PER_SEC << " ms\n"
-              << "DFA wall clock time passed: "
+              << "Symbolic DFA construction wall clock time passed: "
               << std::chrono::duration<double, std::milli>(t_dfa_end-t_start).count()
               << " ms\n";
 
@@ -58,9 +58,9 @@ int main(int argc, char ** argv){
         res = test.realizablity_sys(strategy);
 
     if(res)
-        cout<<"realizable"<<endl;
+        cout<<"Realizable"<<endl;
     else
-        cout<<"unrealizable"<<endl;
+        cout<<"Unrealizable"<<endl;
     clock_t c_end = clock();
     auto t_end = chrono::high_resolution_clock::now();
     std::cout << "Total CPU time used: "

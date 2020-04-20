@@ -33,6 +33,7 @@ class DFA
 	
         //new bdd constructer
         void construct_bdd_new();
+        bool flag = false;
 
         Cudd* mgr;
 

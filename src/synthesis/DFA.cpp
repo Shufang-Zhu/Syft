@@ -18,21 +18,21 @@ DFA::~DFA()
 void DFA::initialize(string filename, string partfile){
     //ctor
     read_from_file(filename);
-    cout<<"The number of explicit states: "<<nstates<<endl;
-    nbits = state2bin(nstates-1).length();
+    if(flag == true) {
+    cout<<"Number of DFA states: "<<nstates-1<<endl;
+        nbits = state2bin(nstates-2).length();
+        construct_bdd_new();
+        cout << "Number of state variables: " << nbits << endl;
+        read_partfile(partfile);
 
-    //get_bdd();
-    //print_vec(bdd);
-    //construct_bdd();
-    construct_bdd_new();
-    cout<<"The number of state variables: "<<nbits<<endl;
-    read_partfile(partfile);
-
-    initbv = new int[nbits];
-    int temp = init;
-    for (int i=nbits-1; i>=0; i--){
-      initbv[i] = temp%2;
-      temp = temp/2;
+        initbv = new int[nbits];
+        int temp = init;
+        for (int i = nbits - 1; i >= 0; i--) {
+            initbv[i] = temp % 2;
+            temp = temp / 2;
+        }
+    }else{
+        cout<<"DFA with no accepting traces"<<endl;
     }
 }
 
@@ -124,8 +124,10 @@ ifstream f(filename.c_str());
                     split(fields, line, is_any_of(" "));
                     int i = 1; // start at 1 to ignore "final" token
                     while(i < fields.size()){
-                        if(fields[i] == "1")
-                            finalstates.push_back(i-1);
+                        if(fields[i] == "1") {
+                            finalstates.push_back(i - 1);
+                            flag = true;
+                        }
                         i = i + 1;
                     }
                     //print_int(finalstates);
@@ -207,7 +209,6 @@ void DFA::construct_bdd_new(){
         bddvars.push_back(b);
         //dumpdot(b, to_string(i));
     }
-   // std::cout<<"constructing bdd with "<<bddvars.size()<<"variables"<<std::endl;
 
     for(int i = 0; i < nbits; i++){
         BDD d = mgr->bddZero();
@@ -216,16 +217,14 @@ void DFA::construct_bdd_new(){
     tBDD.resize(smtbdd.size());
     for(int i = 0; i < tBDD.size(); i++){
         if(tBDD[i].size() == 0){
-            //dumpdot(tBDD[i][0], "test");
             vbdd b = try_get(i);
         }
     }
 
-
     for(int i = 0; i < nbits; i++){
-        for(int j = 0; j < nstates; j++){
+        for(int j = 1; j < nstates; j++){
             BDD tmp = mgr->bddOne();
-            string bins = state2bin(j);
+            string bins = state2bin(j-1);
             int offset = nbits - bins.size();
             for(int m = 0; m < offset; m++){
                 tmp = tmp * var2bddvar(0, m);
@@ -244,7 +243,7 @@ void DFA::construct_bdd_new(){
 
     finalstatesBDD = mgr->bddZero();
     for(int i = 0; i < finalstates.size(); i++){
-        BDD ac = state2bdd(finalstates[i]);
+        BDD ac = state2bdd(finalstates[i]-1);
         finalstatesBDD += ac;
     }
 }
