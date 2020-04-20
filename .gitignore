@@ -49,7 +49,6 @@ ltlf2fol_old
 
 #build files
 build/
-
 .idea/
 cmake-build-debug/
 test/

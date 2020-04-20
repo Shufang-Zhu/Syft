@@ -18,7 +18,7 @@ DFA::~DFA()
 void DFA::initialize(string filename, string partfile){
     //ctor
     read_from_file(filename);
-    if(flag == true) {
+    if(DFAflag == true) {
     cout<<"Number of DFA states: "<<nstates-1<<endl;
         nbits = state2bin(nstates-2).length();
         construct_bdd_new();
@@ -126,7 +126,7 @@ ifstream f(filename.c_str());
                     while(i < fields.size()){
                         if(fields[i] == "1") {
                             finalstates.push_back(i - 1);
-                            flag = true;
+                            DFAflag = true;
                         }
                         i = i + 1;
                     }

@@ -7,7 +7,7 @@ syn::syn(Cudd* m, string filename, string partfile)
     //Cudd *p = &mgr;
     bdd = new DFA(m);
     bdd->initialize(filename, partfile);
-    if(bdd->flag == true){
+    if(bdd->DFAflag == true){
         mgr = m;
         initializer();
     }
@@ -93,7 +93,7 @@ void syn::printBDDSat(BDD b){
 }
 
 bool syn::realizablity_sys(unordered_map<unsigned int, BDD>& IFstrategy){
-    if(bdd->flag == false){
+    if(bdd->DFAflag == false){
         return false;
     }
     int iteration = 0;
