@@ -19,8 +19,6 @@ syn::syn(Cudd* m, DFA* d)
     bdd = d;
     mgr = m;
     initializer();
-
-    bdd->bdd2dot();
 }
 
 syn::~syn()
