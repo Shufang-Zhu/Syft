@@ -1,4 +1,4 @@
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 14)
 
 add_library(synthesis SHARED Common.cpp DFA.cpp InputFirst.cpp syn.cpp)
 include_directories(${CUDD_INCLUDE_DIRS})
