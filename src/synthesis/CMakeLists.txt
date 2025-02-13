@@ -1,21 +1,19 @@
-set (CMAKE_CXX_STANDARD 14)
+set (SYNTHESIS_LIB_NAME "synthesis")
+set (SYNTHESIS_MODULE_PATH "${PROJECT_SOURCE_DIR}/src/synthesis")
+set (SYNTHESIS_INCLUDE_PATH  "${SYNTHESIS_MODULE_PATH}/header")
+set (SYNTHESIS_SRC_PATH "${SYNTHESIS_MODULE_PATH}/source" )
 
-add_library(synthesis SHARED Common.cpp DFA.cpp InputFirst.cpp syn.cpp)
-include_directories(${CUDD_INCLUDE_DIRS})
+include_directories(${EXT_INCLUDE_PATH} ${SYNTHESIS_INCLUDE_PATH} ${PARSER_INCLUDE_PATH})
+message(STATUS EXT_INCLUDE_PATH ${EXT_INCLUDE_PATH})
 
-#add_executable(synth synStrategy.cpp)
-add_executable(Syft main.cpp)
+#set sources
+file (GLOB_RECURSE HEADER_FILES ${SYNTHESIS_INCLUDE_PATH}/*.h)
+file (GLOB_RECURSE SOURCE_FILES ${SYNTHESIS_SRC_PATH}/*.cpp)
 
-target_link_libraries(Syft synthesis ${CUDD_LIBRARIES})
-#target_link_libraries(synth synthesis ${CUDD_LIBRARIES})
+add_library(${SYNTHESIS_LIB_NAME} STATIC ${HEADER_FILES} ${SOURCE_FILES})
 
-#install(TARGETS bdd synth synthesis
-install(TARGETS Syft synthesis
-  RUNTIME DESTINATION bin
-  LIBRARY DESTINATION lib
-  )
+target_link_libraries(${SYNTHESIS_LIB_NAME} ${PARSER_LIB_NAME} ${EXT_LIBRARIES_PATH})
 
-INSTALL (
-  DIRECTORY ${CMAKE_SOURCE_DIR}/src/synthesis
-    DESTINATION include
-    FILES_MATCHING PATTERN "*.h*")
+#export vars
+set (SYNTHESIS_INCLUDE_PATH  ${SYNTHESIS_INCLUDE_PATH} PARENT_SCOPE)
+set (SYNTHESIS_LIB_NAME ${SYNTHESIS_LIB_NAME} PARENT_SCOPE)
