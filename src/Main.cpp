@@ -1,158 +1,173 @@
-#include <cstring>
+#include <fstream>
 #include <iostream>
-#include <memory>
-
-#include "Stopwatch.h"
-
-#include "ExplicitStateDfaMona.h"
-#include "ReachabilityMaxSetSynthesizer.h"
+#include <string>
+#include <SymbolicStateDfa.h>
+#include "VarMgr.h"
+#include "Player.h"
 #include "InputOutputPartition.h"
-#include <CLI/CLI.hpp>
-#include <istream>
+#include <spot/tl/parse.hh>
+#include <spot/twaalgos/ltlf2dfa.hh>
+#include <spot/twa/twagraph.hh>
+#include <StopWatch.h>
 
+#include "ReachabilityMaxSetSynthesizer.h"
 
-int main(int argc, char ** argv) {
+struct Args {
+    std::string ltlf_file;
+    std::string tlsf_file;
+    std::string partition_file;
+    bool agent_starting = true;  // true for Agent, false for Environment
+    bool help = false;
+};
 
-    CLI::App app {
-            "Syft interface for maxset"
-    };
+Args parse_args(int argc, char* argv[]) {
+    Args args;
 
-    std::string formula_file, partition_file;
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg == "-h" || arg == "--help") {
+            args.help = true;
+        } else if (arg == "-f" || arg == "--ltlf") {
+            if (i + 1 < argc) {
+                args.ltlf_file = argv[++i];
+            }
+        } else if (arg == "-t" || arg == "--tlsf") {
+            if (i + 1 < argc) {
+                args.tlsf_file = argv[++i];
+            }
+        } else if (arg == "-p" || arg == "--partition") {
+            if (i + 1 < argc) {
+                args.partition_file = argv[++i];
+            }
+        } else if (arg == "-e" || arg == "--environment-first") {
+            args.agent_starting = false;
+        }
+    }
 
-    app.add_option("-f,--formula-file", formula_file, "Specification file")->
-                    required() -> check(CLI::ExistingFile);
+    return args;
+}
 
-    app.add_option("-p,--partition-file", partition_file, "Partition file" )->
-                    required () -> check(CLI::ExistingFile);
+void print_usage() {
+    std::cout << "Usage: syn [options]\n"
+              << "Options:\n"
+              << "  -h, --help                   Show this help message\n"
+              << "  -f, --ltlf FILE              Input LTLf formula file\n"
+              << "  -p, --partition FILE         Input partition file\n"
+              << "  -t, --tlsf FILE              Input TLSF specification file\n"
+              << "  -e, --environment-first      Environment plays first (default: Agent)\n";
+}
 
-    bool env_start = false;
-    app.add_flag("-e, --environment", env_start, "Environment as the first player");
-
-    bool maxset = false;
-    app.add_flag("-m,--maxset", maxset, "Maxset flag (Default: false)");
-
-    bool fanin_encoding = false;
-    app.add_flag("--fanin", fanin_encoding, "fanin encoding flag (Default: false)");
-
-    bool fanout_encoding = false;
-    app.add_flag("--fanout", fanout_encoding, "fanout encoding flag (Default: false)");
-
-
-    CLI11_PARSE(app, argc, argv);
+int main(int argc, char* argv[]) {
     Syft::Stopwatch total_time_stopwatch; // stopwatch for end-to-end execution
     total_time_stopwatch.start();
 
     Syft::Stopwatch aut_time_stopwatch; // stopwatch for abstract single strategy
     aut_time_stopwatch.start();
 
-    Syft::Player starting_player = env_start? Syft::Player::Environment : Syft::Player::Agent;
-    Syft::Player protagonist_player = Syft::Player::Agent;
-    bool realizability;
-    std::ifstream in(formula_file);
-    std::string f;
-    std::getline(in, f);
+    Syft::Stopwatch sym_time_stopwatch;
+    sym_time_stopwatch.start();
 
-    Syft::InputOutputPartition partition =
-            Syft::InputOutputPartition::read_from_file(partition_file);
-    std::shared_ptr<Syft::VarMgr> var_mgr = std::make_shared<Syft::VarMgr>();
-    var_mgr->create_named_variables(partition.input_variables);
-    var_mgr->create_named_variables(partition.output_variables);
+    Args args = parse_args(argc, argv);
 
-    Syft::ExplicitStateDfaMona explicit_dfa_mona = Syft::ExplicitStateDfaMona::dfa_of_formula(f);
-    Syft::ExplicitStateDfa explicit_dfa =  Syft::ExplicitStateDfa::from_dfa_mona(var_mgr, explicit_dfa_mona);
+    if (args.help) {
+        print_usage();
+        return 0;
+    }
 
-    // explicit_dfa_mona.dfa_print();
+    if (args.ltlf_file.empty()) {
+        std::cerr << "Error: LTLf formula file is required\n";
+        print_usage();
+        return 1;
+    }
 
-    Syft::SymbolicStateDfa symbolic_dfa =
-    (fanout_encoding) ? Syft::SymbolicStateDfa::from_explicit_fanout_encoding(std::move(explicit_dfa))
-    : (fanin_encoding) ? Syft::SymbolicStateDfa::from_explicit_fanin_encoding(std::move(explicit_dfa))
-    : Syft::SymbolicStateDfa::from_explicit(std::move(explicit_dfa));
+    if (args.partition_file.empty()) {
+        std::cerr << "Error: Partition file is required\n";
+        print_usage();
+        return 1;
+    }
 
+    std::string ltlf_formula_str;
+    std::ifstream ltlf_formula_stream(args.ltlf_file);
+    if (!ltlf_formula_stream.is_open()) {
+        std::cerr << "Error: Cannot open LTLf formula file: " << args.ltlf_file << std::endl;
+        return 1;
+    }
+    getline(ltlf_formula_stream, ltlf_formula_str);
+    // std::cout << "LTLf formula: " << ltlf_formula_str << std::endl;
+
+    Syft::Player starting_player = args.agent_starting ? Syft::Player::Agent : Syft::Player::Environment;
+    // std::cout << "Starting player: " << (args.agent_starting ? "Agent" : "Environment") << std::endl;
+
+
+    spot::formula pf = spot::parse_formula(ltlf_formula_str); // "G(a) | G(b) | F(!a) | F(!b)"
+    // std::cout << pf << std::endl;
+
+
+    spot::bdd_dict_ptr bdd_dict_ptr = spot::make_bdd_dict();
+    spot::ltlf_translator translator(bdd_dict_ptr);
+    spot::mtdfa_ptr mtdfa = translator.ltlf_to_mtdfa(pf, true);
 
     auto aut_time = aut_time_stopwatch.stop();
-    std::cout << "DFA construction time: "
+    std::cout << "SPOT DFA construction time: "
               << aut_time.count() << " ms" << std::endl;
 
-    std::cout << "Number of BDD nodes: "
-          << symbolic_dfa.bdd_nodes_num() << std::endl;
-    std::cout << "Number of BDD nodes in transitions: "
-          << symbolic_dfa.bdd_nodes_num_transitions() << std::endl;
-    std::cout << "Number of BDD nodes in final states: "
-          << symbolic_dfa.bdd_nodes_num_final_states() << std::endl;
 
-    // symbolic_dfa.dump_dot("dfa-o.dot");
-    // for (auto i = 0; i < symbolic_dfa.initial_state().size(); ++i) {
-    //     std::cout << symbolic_dfa.initial_state()[i] << " ";
-    // }
-    // std::cout << "Final states: " << symbolic_dfa.final_states() << std::endl;
+    // TODO if mtdfa is valid, then realizable.
+    if (mtdfa->is_empty()) {
+        std::cout << "The problem is Unrealizable" << std::endl;
+        return 0;
+    }
 
 
-    Syft::Stopwatch nondef_strategy_time_stopwatch; // stopwatch for strategy_generator construction
-    nondef_strategy_time_stopwatch.start();
+    // std::ofstream file("mtdfa.dot");
+    //
+    // mtdfa->print_dot(file, -1, false);
 
-    Syft::Stopwatch syn_time_stopwatch; // stopwatch for strategy_generator construction
+    // bddExtCache* cache = translator.get_cache();
+
+
+    std::shared_ptr<Syft::VarMgr> var_mgr = std::make_shared<Syft::VarMgr>();
+    Syft::ExplicitStateDfa explicit_dfa = Syft::ExplicitStateDfa::from_dfa_spot(var_mgr, bdd_dict_ptr, mtdfa);
+    // explicit_dfa.dump_dot("dfa.dot");
+
+    // Syft::SymbolicStateDfa symbolic_state_dfa = Syft::SymbolicStateDfa::from_spot_mtdfa(var_mgr, mtdfa);
+
+    // Syft::ExplicitStateDfaMona explicit_dfa_mona = Syft::ExplicitStateDfaMona::dfa_of_formula(ltlf_formula_str);
+    // Syft::ExplicitStateDfa explicit_dfa = Syft::ExplicitStateDfa::from_dfa_mona(var_mgr, explicit_dfa_mona);
+    Syft::SymbolicStateDfa symbolic_state_dfa = Syft::SymbolicStateDfa::from_explicit(explicit_dfa);
+
+    auto sym_time = sym_time_stopwatch.stop();
+    std::cout << "Symbolic DFA construction time: "
+              << sym_time.count() << " ms" << std::endl;
+
+    Syft::Stopwatch syn_time_stopwatch;
     syn_time_stopwatch.start();
 
-    var_mgr->partition_variables(partition.input_variables,
-                                 partition.output_variables);
+    Syft::InputOutputPartition partition =
+        Syft::InputOutputPartition::read_from_file(args.partition_file);
 
-    Syft::ReachabilityMaxSetSynthesizer synthesizer(symbolic_dfa, starting_player,
-                                              protagonist_player, symbolic_dfa.final_states(),
-                                  var_mgr->cudd_mgr()->bddOne());
+    // partition.print();
+    var_mgr->partition_variables(partition.input_variables, partition.output_variables);
+
+
+
+    Syft::ReachabilityMaxSetSynthesizer synthesizer(symbolic_state_dfa, starting_player, Syft::Player::Agent,
+                                                       symbolic_state_dfa.final_states(), var_mgr->cudd_mgr()->bddOne());
     Syft::SynthesisResult result = synthesizer.run();
 
-    realizability = result.realizability;
+    bool realizability = result.realizability;
     if (realizability == true) {
         std::cout << "The problem is Realizable" << std::endl;
-
-        auto nondef_strategy_time = nondef_strategy_time_stopwatch.stop();
-        std::cout << "Nondeferring strategy generator construction time: "
-                  << nondef_strategy_time.count() << " ms" << std::endl;
-
-        if (!maxset) {
-            Syft::Stopwatch abstract_single_strategy_time_stopwatch; // stopwatch for abstract single strategy
-            abstract_single_strategy_time_stopwatch.start();
-
-            auto transducer = synthesizer.AbstractSingleStrategy(std::move(result));
-//            transducer->dump_dot("strategy.dot");
-
-            auto abstract_single_strategy_time = abstract_single_strategy_time_stopwatch.stop();
-            std::cout << "Abstract single strategy time: "
-                      << abstract_single_strategy_time.count() << " ms" << std::endl;
-        } else {
-            Syft::Stopwatch def_strategy_time_stopwatch; // stopwatch for abstract single strategy
-            def_strategy_time_stopwatch.start();
-
-            Syft::MaxSet maxset = synthesizer.AbstractMaxSet(std::move(result));
-
-            auto def_strategy_time = def_strategy_time_stopwatch.stop();
-            std::cout << "Deferring strategy generator construction time: "
-                      << def_strategy_time.count() << " ms" << std::endl;
-
-            Syft::Stopwatch abstract_single_strategy_time_stopwatch; // stopwatch for abstract single strategy
-            abstract_single_strategy_time_stopwatch.start();
-
-//            auto transducer_pair = synthesizer.AbstractSingleStrategyFromMaxSet(std::move(maxset));
-////            transducer_pair.first->dump_dot("deferring_strategy.dot");
-////            transducer_pair.second->dump_dot("nondeferring_strategy.dot");
-//
-//            auto abstract_single_strategy_time = abstract_single_strategy_time_stopwatch.stop();
-//            std::cout << "Abstract single strategy time: "
-//                      << abstract_single_strategy_time.count() << " ms" << std::endl;
-        }
-    }
-    else{
+    } else {
         std::cout << "The problem is Unrealizable" << std::endl;
     }
-    auto synthesis_time = syn_time_stopwatch.stop();
 
+    auto syn_time = syn_time_stopwatch.stop();
     std::cout << "Synthesis time: "
-          << synthesis_time.count() << " ms" << std::endl;
-  auto total_time = total_time_stopwatch.stop();
+              << syn_time.count() << " ms" << std::endl;
 
-  std::cout << "Total time: "
-	    << total_time.count() << " ms" << std::endl;
+    auto total_time = total_time_stopwatch.stop();
+    std::cout << "Total time: "
+              << total_time.count() << " ms" << std::endl;
 
-  return 0;
 }
-

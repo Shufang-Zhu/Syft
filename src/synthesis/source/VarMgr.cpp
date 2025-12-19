@@ -43,6 +43,24 @@ std::size_t VarMgr::create_state_variables(std::size_t variable_count) {
   return automaton_id;
 }
 
+std::size_t VarMgr::create_primed_state_variables(std::size_t variable_count){
+  std::size_t automaton_id = primed_state_variables_.size();
+
+  primed_state_variables_.emplace_back();
+  primed_state_variables_[automaton_id].reserve(variable_count);
+
+  for (std::size_t i = 0; i < variable_count; ++i) {
+    // Creates a new variable at the top of the variable ordering
+    CUDD::BDD new_state_variable = mgr_->bddNewVarAtLevel(0);
+
+    primed_state_variables_[automaton_id].push_back(new_state_variable);
+  }
+
+  primed_state_variable_count_ += variable_count;
+
+  return automaton_id;
+}
+
 std::size_t VarMgr::create_product_state_space(
     const std::vector<std::size_t>& automaton_ids) {
   std::size_t product_automaton_id = state_variables_.size();
@@ -62,6 +80,16 @@ std::size_t VarMgr::create_product_state_space(
 CUDD::BDD VarMgr::state_variable(std::size_t automaton_id, std::size_t i)
     const {
   return state_variables_[automaton_id][i];
+}
+
+CUDD::BDD VarMgr::primed_state_variable(std::size_t automaton_id, std::size_t i)
+      const {
+  return primed_state_variables_[automaton_id][i];
+}
+
+std::vector<CUDD::BDD> VarMgr::primed_state_variables(std::size_t automaton_id)
+        const {
+  return primed_state_variables_[automaton_id];
 }
   
 CUDD::BDD VarMgr::state_vector_to_bdd(std::size_t automaton_id,
@@ -92,17 +120,21 @@ void VarMgr::partition_variables(const std::vector<std::string>& input_names,
 //	"Error: Input-output partition is the wrong size.");
 //  }
 
-    if (input_names.size() + output_names.size() != index_to_name_.size()) {
-        throw std::runtime_error(
-                "Error: Input-output partition is the wrong size.");
-    }
+    // if (input_names.size() + output_names.size() != index_to_name_.size()) {
+    //     throw std::runtime_error(
+    //             "Error: Input-output partition is the wrong size.");
+    // }
   
   for (const std::string& input_name : input_names) {
-    input_variables_.push_back(name_to_variable(input_name));
+    if (name_to_variable_.find(input_name) != name_to_variable_.end()) {
+      input_variables_.push_back(name_to_variable(input_name));
+    }
   }
 
   for (const std::string& output_name : output_names) {
-    output_variables_.push_back(name_to_variable(output_name));
+    if (name_to_variable_.find(output_name) != name_to_variable_.end()) {
+      output_variables_.push_back(name_to_variable(output_name));
+    }
   }
 }
 
@@ -119,11 +151,15 @@ std::string VarMgr::index_to_name(int index) const {
 }
 
 std::size_t VarMgr::total_variable_count() const {
-  return name_to_variable_.size() + total_state_variable_count();
+  return name_to_variable_.size() + total_state_variable_count() + total_primed_state_variable_count();
 }
   
 std::size_t VarMgr::total_state_variable_count() const {
   return state_variable_count_;
+}
+
+std::size_t VarMgr::total_primed_state_variable_count() const {
+  return primed_state_variable_count_;
 }
 
 std::size_t VarMgr::state_variable_count(std::size_t automaton_id) const {
@@ -148,6 +184,10 @@ CUDD::BDD VarMgr::output_cube() const {
 
 CUDD::BDD VarMgr::state_variables_cube(std::size_t automaton_id) const {
     return mgr_->computeCube(state_variables_[automaton_id]);
+}
+
+CUDD::BDD VarMgr::primed_state_variables_cube(std::size_t automaton_id) const {
+  return mgr_->computeCube(primed_state_variables_[automaton_id]);
 }
 
 std::vector<int> VarMgr::make_eval_vector(
@@ -193,10 +233,18 @@ std::vector<CUDD::BDD> VarMgr::make_compose_vector(
       std::size_t index = variable.NodeReadIndex();
       compose_vector[index] = variable;
     }
+    for (const CUDD::BDD& variable : primed_state_variables_[id]) {
+      std::size_t index = variable.NodeReadIndex();
+      compose_vector[index] = variable;
+    }
   }
 
   for (std::size_t id = automaton_id + 1; id < state_variables_.size(); ++id) {
     for (const CUDD::BDD& variable : state_variables_[id]) {
+      std::size_t index = variable.NodeReadIndex();
+      compose_vector[index] = variable;
+    }
+    for (const CUDD::BDD& variable : primed_state_variables_[id]) {
       std::size_t index = variable.NodeReadIndex();
       compose_vector[index] = variable;
     }
@@ -206,6 +254,12 @@ std::vector<CUDD::BDD> VarMgr::make_compose_vector(
   for (std::size_t i = 0; i < state_variables_[automaton_id].size(); ++i) {
     std::size_t index = state_variables_[automaton_id][i].NodeReadIndex();
     compose_vector[index] = state_bdds[i];
+  }
+  if (primed_state_variable_count_ > 0) {
+    for (std::size_t i = 0; i < primed_state_variables_[automaton_id].size(); ++i) {
+      std::size_t index = primed_state_variables_[automaton_id][i].NodeReadIndex();
+      compose_vector[index] = state_bdds[i];
+    }
   }
 
   return compose_vector;
@@ -222,6 +276,13 @@ std::vector<std::string> VarMgr::variable_labels() const {
     for (std::size_t i = 0; i < state_variables_[id].size(); ++i) {
       std::size_t index = state_variables_[id][i].NodeReadIndex();
       labels[index] = "A" + std::to_string(id) + ":Z" + std::to_string(i);
+    }
+  }
+
+  for (std::size_t id = 0; id < primed_state_variables_.size(); ++id) {
+    for (std::size_t i = 0; i < primed_state_variables_[id].size(); ++i) {
+      std::size_t index = primed_state_variables_[id][i].NodeReadIndex();
+      labels[index] = "A" + std::to_string(id) + ":Zprime" + std::to_string(i);
     }
   }
 

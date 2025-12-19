@@ -2,7 +2,7 @@
 #include <algorithm>
 
 #include <bitset>
-#include <CLI/TypeTools.hpp>
+// #include <CLI/TypeTools.hpp>
 
 namespace Syft {
 
@@ -26,6 +26,27 @@ std::pair<std::size_t, std::size_t> SymbolicStateDfa::create_state_variables(
 
   std::size_t automaton_id = var_mgr->create_state_variables(bit_count);
   
+  return std::make_pair(bit_count, automaton_id);
+}
+
+std::pair<std::size_t, std::size_t> SymbolicStateDfa::create_state_variables_classical(
+      std::shared_ptr<VarMgr>& var_mgr,
+      std::size_t state_count) {
+  // Largest state index that needs to be represented
+  std::size_t max_state = state_count - 1;
+
+  std::size_t bit_count = 0;
+
+  // Number of iterations equals the log of the state count
+  while (max_state > 0) {
+    ++bit_count;
+    max_state >>= 1;
+  }
+
+  std::size_t automaton_id = var_mgr->create_state_variables(bit_count);
+  std::size_t classical_id = var_mgr->create_primed_state_variables(bit_count);
+  assert(automaton_id == classical_id);
+
   return std::make_pair(bit_count, automaton_id);
 }
 
@@ -94,6 +115,8 @@ std::vector<CUDD::BDD> SymbolicStateDfa::symbolic_transition_function(
   return symbolic_transition_function;
 }
 
+
+
 SymbolicStateDfa SymbolicStateDfa::from_explicit(
     const ExplicitStateDfa& explicit_dfa) {
   std::shared_ptr<VarMgr> var_mgr = explicit_dfa.var_mgr();
@@ -112,6 +135,10 @@ SymbolicStateDfa SymbolicStateDfa::from_explicit(
   std::vector<CUDD::BDD> transition_function = symbolic_transition_function(
       var_mgr, automaton_id, explicit_dfa.transition_function());
 
+  if (transition_function.empty()) {
+    transition_function.push_back(var_mgr->cudd_mgr()->bddOne());
+  }
+
   SymbolicStateDfa symbolic_dfa(var_mgr);
   symbolic_dfa.automaton_id_ = automaton_id;
   symbolic_dfa.initial_state_ = std::move(initial_state);
@@ -121,6 +148,38 @@ SymbolicStateDfa SymbolicStateDfa::from_explicit(
   return symbolic_dfa;
 }
 
+SymbolicStateDfa SymbolicStateDfa::from_explicit_classical(
+    const ExplicitStateDfa& explicit_dfa) {
+  std::shared_ptr<VarMgr> var_mgr = explicit_dfa.var_mgr();
+
+  auto count_and_id = create_state_variables_classical(var_mgr,
+               explicit_dfa.state_count());
+  std::size_t bit_count = count_and_id.first;
+  std::size_t automaton_id = count_and_id.second;
+
+
+  std::vector<int> initial_state = state_to_binary(explicit_dfa.initial_state(),
+               bit_count);
+
+  CUDD::BDD final_states = state_set_to_bdd(var_mgr, automaton_id,
+              explicit_dfa.final_states());
+
+  std::vector<CUDD::BDD> transition_function = symbolic_transition_function(
+      var_mgr, automaton_id, explicit_dfa.transition_function());
+
+  if (transition_function.empty()) {
+    transition_function.push_back(var_mgr->cudd_mgr()->bddOne());
+  }
+
+
+  SymbolicStateDfa symbolic_dfa(var_mgr);
+  symbolic_dfa.automaton_id_ = automaton_id;
+  symbolic_dfa.initial_state_ = std::move(initial_state);
+  symbolic_dfa.final_states_ = std::move(final_states);
+  symbolic_dfa.transition_function_ = std::move(transition_function);
+
+  return symbolic_dfa;
+}
 
 SymbolicStateDfa SymbolicStateDfa::from_explicit_fanout_encoding(const ExplicitStateDfa &explicit_dfa) {
   std::shared_ptr<VarMgr> var_mgr = explicit_dfa.var_mgr();
@@ -596,6 +655,9 @@ SymbolicStateDfa SymbolicStateDfa::product(const std::vector<SymbolicStateDfa>& 
 }
 
   std::size_t SymbolicStateDfa::bdd_nodes_num_transitions() const {
+    if (transition_function_.empty()) {
+      return 0;
+    }
     return var_mgr()->cudd_mgr()->nodeCount(transition_function_);
   }
 

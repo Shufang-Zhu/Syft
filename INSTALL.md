@@ -18,14 +18,6 @@
         autoreconf -i
 
 
-==== Install FLEX, BISON ====
-
-0.3 Install flex and bison:
-
-    sudo apt-get install flex bison
-
-
-
 ==== Install SPOT ====
 
 0.5 Spot can be found at:
@@ -33,15 +25,7 @@
     https://spot.lrde.epita.fr/
 
 
-==== Install LYDIA ====
-
-    cd submodules
-    cd lydia
-
-Follow the instructions to complete the installation of lydia.
-
-
-==== Build SYFTMAX ====
+==== Build SPOTSYFT ====
 
 1. Make build folder so your directory is not flooded with build files:
 
@@ -55,19 +39,17 @@ Follow the instructions to complete the installation of lydia.
 
     ```make```
 
-==== Run SYFTMAX ====
+==== Run SPOTSYFT ====
 
-1. Reach executable file Syftmax
+1. Reach executable file 
 
    ```cd bin```
 
 2. Run example:
 
     ---- Synthesize one single strategy ----
-        Agn first: ```./Syftmax -f ../../example/env.ltlf -p ../../example/test.part```
+        Agn first: ```./SpotSyft -f ../../example/env.ltlf -p ../../example/test.part```
 
-    ---- Synthesize the maximally permissive strategy ----
-        Agn first: ```./Syftmax -f ../../example/env.ltlf -p ../../example/test.part -m```
    
 
 

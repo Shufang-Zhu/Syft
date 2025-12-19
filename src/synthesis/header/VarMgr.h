@@ -20,7 +20,9 @@ class VarMgr {
   std::unordered_map<int, std::string> index_to_name_;
   std::unordered_map<std::string, CUDD::BDD> name_to_variable_;
   std::size_t state_variable_count_ = 0;
+  std::size_t primed_state_variable_count_ = 0;
   std::vector<std::vector<CUDD::BDD>> state_variables_;
+  std::vector<std::vector<CUDD::BDD>> primed_state_variables_;
   std::vector<CUDD::BDD> input_variables_;
   std::vector<CUDD::BDD> output_variables_;
   std::size_t total_variable_count_ = 0;
@@ -51,6 +53,7 @@ class VarMgr {
    * \return The automaton ID the variables are associated with.
    */
   std::size_t create_state_variables(std::size_t variable_count);
+  std::size_t create_primed_state_variables(std::size_t variable_count);
 
   /**
    * \brief Registers a new automaton ID associated with a product state space.
@@ -71,6 +74,10 @@ class VarMgr {
    * \brief Returns the i-th state variable for a given automaton.
    */
   CUDD::BDD state_variable(std::size_t automaton_id, std::size_t i) const;
+
+  CUDD::BDD primed_state_variable(std::size_t automaton_id, std::size_t i) const;
+
+  std::vector<CUDD::BDD> primed_state_variables(std::size_t automaton_id) const;
   
   /**
    * \brief Converts a state vector to a BDD.
@@ -120,6 +127,7 @@ class VarMgr {
    * \brief Returns the total number of state variables.
    */
   std::size_t total_state_variable_count() const;
+  std::size_t total_primed_state_variable_count() const;
 
   /**
    * \brief Returns the number of state variables for a given automaton.
@@ -150,6 +158,8 @@ class VarMgr {
      * \brief Returns a BDD formed by the conjunction of all state variables of automaton automaton_id.
      */
     CUDD::BDD state_variables_cube(std::size_t automaton_id) const;
+
+ CUDD::BDD primed_state_variables_cube(std::size_t automaton_id) const;
 
   /**
    * \brief Creates a valid input to CUDD::BDD::Eval.

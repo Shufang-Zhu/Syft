@@ -2,11 +2,11 @@ add_subdirectory(synthesis)
 
 
 include_directories(${SYNTHESIS_INCLUDE_PATH} ${EXT_INCLUDE_PATH})
-add_executable(Syftmax Main.cpp)
+add_executable(SpotSyft Main.cpp)
 
-target_link_libraries(Syftmax ${SYNTHESIS_LIB_NAME})
+target_link_libraries(SpotSyft ${SYNTHESIS_LIB_NAME})
 
-install(TARGETS Syftmax
+install(TARGETS SpotSyft
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   )
